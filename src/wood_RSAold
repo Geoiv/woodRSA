@@ -1,0 +1,229 @@
+/*
+FIPS Compliant RSA Implementation - George Wood - Capstone Project
+*/
+
+#include <iostream>
+#include <vector>
+#include <bitset>
+#include <math.h>
+#include <ctime>
+#include "bigint/BigIntegerLibrary.hh"
+using namespace std;
+
+
+/*
+L = 1024, N = 160
+L = 2048, N = 224
+L = 2048, N = 256
+L = 3072, N = 256
+*/
+
+//As specified in NIST Special Publication 500-87 Part 1, Page 53
+//For keystrength 1024: <= 80, for 2048: 112, for 3072: 128
+const int SECURITY_STRENGTH = 128;
+
+bool isValidPair(int L, int N)
+{
+  bool isValid = true;
+  return isValid;
+}
+
+//TODO
+BigUnsigned hashAlg(BigUnsigned inputX)
+{
+
+}
+
+string genRandBits(int stringSize)
+{
+  string outputString = "";
+  for (int i = 0; i < stringSize; i++)
+  {
+    outputString += to_string(rand() % 2);
+  }
+  return outputString;
+}
+
+//Appendix C.6 TODO
+bool randomPrime(int length, BigUnsigned seed, BigUnsigned& outputPrime, BigUnsigned& outputSeed, BigUnsigned& outputCounter)
+{
+  BigUnsigned randPrime;
+  bool status;
+  return status;
+}
+
+//TODO approved RBG
+
+/*
+Generates the p & q, the seeds needed for RSA key generation.
+seedLen must be larger than N.
+*/
+bool genRSASeed(BigUnsignedInABase firstSeed, int seedLen)
+{
+  //1. firstseed = 0
+  firstSeed = BigUnsignedInABase(BigUnsigned(0), 2);
+  BigUnsignedInABase firstSeedMin(modexp(2, (N - 1), 1), 2);
+  //2. Check that N is in the list of acceptable (L, N) pairs (see Section 4.2). If not, then return FAILURE.
+  //Done earlier in main
+
+  //3. If (seedlen < N), then return FAILURE.
+  if (seedLen < N)
+  {
+    return false;
+  }
+
+  //4. While firstseed < 2N–1, Get an arbitrary sequence of seedlen bits as firstseed.
+  while (BigUnsigned(firstSeed) < BigUnsigned(firstSeedMin))
+  {
+    firstSeed = BigUnsignedInABase(genRandBits(seedLen), 2);
+  }
+
+  //5. Return SUCCESS and the value of firstseed.
+  return true;
+}
+
+bool genRSAPrimes(int L, int N, BigUnsignedInABase firstSeed, BigUnsigned& p, BigUnsigned& q)
+{
+  BigUnsigned p0;
+  BigUnsigned qSeed;
+  BigUnsigned pSeed;
+  BigUnsigned qGenCounter;
+  BigUnsigned pGenCounter;
+  BigUnsigned oldCounter;
+  //Output size of hash algorithm used
+  int outLen;
+
+  /* TODO
+  2. Using N as the length and firstseed as the input_seed, use the random prime
+  generation routine in Appendix C.6 to obtain q, qseed and qgen_counter. If
+  FAILURE is returned, then return FAILURE.
+  */
+  if (!randomPrime(N, firstSeed, q, qSeed, qGenCounter))
+  {
+    return false;
+  }
+
+  /*
+  3. UsingL / 2 + 1 as the length and qseed as the input_seed, use the random prime
+  routine in Appendix C.6 to obtain p0 , pseed, and pgen_counter. If FAILURE is
+  returned, then return FAILURE.
+  */
+  else if (!randomPrime((L / 2) + 1, qSeed, p0, pSeed, pGenCounter))
+  {
+    return false;
+  }
+
+  //4. iterations = L / outlen –1.
+  int iterations = ((L / outLen) - 1);
+
+  //5. old counter and pgen counter. old_counter = pgen_counter.
+  oldCounter = pGenCounter;
+
+  //6. x = 0.
+  BigUnsigned x = 0;
+
+  //7. For i = 0 to iterations do x = x + (Hash(pseed + i) ∗ 2^i*outlen).
+  for (int i = 0; i < iterations; i++)
+  {
+    //x += (hashAlg(pSeed + i) * pow(2, i * outLen));
+  }
+
+  //8. pseed = pseed + iterations + 1.
+  pSeed += iterations + 1;
+
+  //9. x = 2^L−1 + (x mod 2^L–1)
+  BigUnsigned moduloVal = modexp(2, (L - 1), 1);
+  x = moduloVal + (modexp(x, moduloVal, 1));
+
+  //10. t = x / (2q p0)
+  BigUnsigned t = x / (q * p0 * 2);
+
+  while (true)
+  {
+    //11.  if ((2tq p0 + 1) > 2^L), then t = 2^L−1 / (2q p0).
+    if (((t * q * p0 * 2) + 1) > modexp(2, L, 1))
+    {
+      t = (modexp(2, (L - 1), 1) / (q * p0 * 2));
+    }
+
+    //12. p = 2tq p0 + 1.
+    p = ((t * q * p0 * 2) + 1);
+
+    //13. pgen_counter = pgen_counter + 1.
+    pGenCounter++;
+
+    //14. a = 0
+    BigUnsigned a = 0;
+
+    //15. For i = 0 to iterations do a = a + (Hash(pseed + i) ∗ 2^i * outlen).
+    for (int i = 0; i < iterations; i++)
+    {
+      //a += (hashAlg(pSeed + i) * pow(2, i * outLen));
+    }
+
+    //16. pseed = pseed + iterations + 1.
+    pSeed += iterations + 1;
+
+    //17. a = 2 + (a mod (p–3)).
+    a = (a % (p - 3)) + 2;
+
+    //18. z = a^2tq mod p.
+    BigUnsigned z = modexp(a, t * q * 2, p);
+
+    /*
+    19. If ((1 = GCD(z–1, p) ) and ( 1 = z^p0 mod p )), then return SUCCESS and the values
+        of p, q and (optionally) pseed, qseed, pgen_counter, and qgen_counter.
+    */
+    if ((gcd((z - 1), p) == 1) && (modexp(z, p0, p) == 1))
+    {
+      return true;
+    }
+
+
+    //20. If (pgen_counter > (4L + old_counter)), then return FAILURE.
+    if (pGenCounter > (oldCounter + (L * 4)))
+    {
+      return false;
+    }
+
+
+    //21. t = t + 1.
+    t++;
+    //22. Go to step 11.
+  }
+}
+
+bool genRSAKeys()
+{
+  BigUnsigned p;
+  BigUnsigned q;
+  //TODO initialize L, N, seedLen better
+  //int L = 3072;
+  int nLen = 3072;
+  int seedLen = N + 1;
+  BigUnsignedInABase firstSeed;
+
+  if (!isValidPair(L, N))
+  {
+    return false;
+  }
+  genRSASeed(firstSeed, N, seedLen);
+  genRSAPrimes(L, N, firstSeed, p, q);
+  //TODO validate primes a.1.2.2
+}
+
+//TODO validate primes?
+
+int main()
+{
+  srand(time(NULL));
+  cout << "FIPS COMPLIANT RSA - GEORGE WOOD" << endl;
+
+  bool keyGenSuccess = genRSAKeys();
+  if (!keyGenSuccess)
+  {
+    return 0;
+  }
+
+  return 0;
+}
