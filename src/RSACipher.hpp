@@ -6,42 +6,57 @@ RSACipher.hpp - George Wood
 #define __RSACIPHER_H__
 
 #include <string>
-#include "bigint/BigUnsigned.hh"
-#include "bigint/BigIntegerAlgorithms.hh"
-
-const int SECURITY_STRENGTH = 128;
-//TODO check vals
-const int L0 = 1024;
-const int N0 = 160;
-const int L1 = 2048;
-const int N1 = 224;
-const int L2 = 2048;
-const int N2 = 256;
-const int L3 = 3072;
-const int N3 = 256;
+#include <map>
+#include "gmp/gmp.h"
 
 class RSACipher
 {
   private:
-    BigUnsigned e;
-    BigUnsigned d;
-    BigUnsigned n;
-    BigUnsigned p;
+    /*
+    As specified in NIST Special Publication 800-57 Part 1, Page 53
+    The first two vals are not approved to have probable primes generated,
+    only probable primes - as such they are not currently implemented
+    N vals are lengths in bits of the n in modulo n
+    s values are the corresponding security strengths to be used
+    */
+    const int nLen0 = 1024;
+    const int s0 = 80;
+    const int nLen1 = 2048;
+    const int s1 = 112;
+    const int nLen2 = 3072;
+    const int s2 = 128;
+    std::map<int, int> validPairs =
+    {
+      {nLen0, s0},
+      {nLen1, s1},
+      {nLen2, s2}
+    };
+    const int outLen = 512;
+    int securityStrength;
+    mpz_t e;
+    mpz_t d;
+    mpz_t n;
+    int nLen;
+    mpz_t q;
+    mpz_t p;
 
-    bool isValidPair(int L, int N);
-    BigUnsigned hashAlg(BigUnsigned inputX);
+    void hashAlg(mpz_t outputX, const mpz_t inputX);
     std::string genRandBits(int stringSize);
-    bool randomPrime(int length, BigUnsigned seed, BigUnsigned& outputPrime,
-      BigUnsigned& outputSeed, BigUnsigned& outputCounter);
-    bool genRSASeed(BigUnsigned& seed, int seedLen);
-    bool genRSAPrimes(int nLen, BigUnsigned e, BigUnsigned seed,
-      BigUnsigned& p, BigUnsigned& q);
+    bool primalityTest(mpz_t potentialPrime);
+    bool randomPrime(int length, mpz_t seed, mpz_t outputPrime,
+      mpz_t outputSeed);
+    bool genFirstSeed(mpz_t seed);
+    bool genPrimeFromAuxiliaries(int l, int n1, int n2,
+      mpz_t firstSeed, const mpz_t e, mpz_t outputPrime, mpz_t outputSeed);
+    bool genPrimes(const mpz_t e, const mpz_t seed,
+      mpz_t p, mpz_t q);
 
   public:
     RSACipher();
+    RSACipher(int inputNLen);
     bool genRSAKeys();
-    bool encrypt(BigUnsigned e, BigUnsigned n, std::string plainText);
-    bool decrypt(BigUnsigned d, BigUnsigned n, std::string cryptText);
+    bool encrypt(mpz_t e, mpz_t n, std::string plainText);
+    bool decrypt(mpz_t d, mpz_t n, std::string cryptText);
 };
 
 #endif

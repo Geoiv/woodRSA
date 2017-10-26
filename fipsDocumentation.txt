@@ -1,0 +1,336 @@
+FIPS Documentation for RSA Implementation
+////////////
+/FIPS 186-4/
+////////////
+
+//=========//
+  SECTION 5
+//=========//
+  Security strength of hash algorithm used should be the meet or exceed
+  that of the rest of the RSA algorithm
+
+  Approved hash functions specified in FIPS 180
+
+  e must be odd (otherwise it would not be prime)
+
+//==========//
+  APPENDIX B
+//==========//
+
+Table B.1
+nlen  / min len of auxiliary primes  /   max len of len(p1)+len(p2)
+      /      (p1, p2, q1, q2)        /     and len(q1)+len(q2)
+      /                              /  probable    /  provable
+//////////////////////////////////////////////////////////////////
+1024  /           >100b              /    <496b     /   <239b
+2048  /           >140b              /    <1007b    /   <494b
+3072  /           >170b              /    <1518b    /   <750b
+
+Table B.2
+  nlen   Random Primes?   Primes w/ Conditions?
+  1024        No                  Yes
+  2048        Yes                 Yes
+  3078        Yes                 Yes
+
+Generation of Random Provable Primes (B.3.2)
+
+B.3.2.1 - Get the Seed
+  Input:
+    nlen - The intended bit length of the modulus n.
+  Output:
+    status - The status to be returned, where status is either SUCCESS
+             or FAILURE.
+    seed - The seed. If status = FAILURE, a value of zero is returned as
+           the seed.
+  Process:
+    1. If nlen is not valid (see Section 5.1), then Return (FAILURE, 0).
+    2. Let security_strength be the security strength associated with nlen, as
+       specified in SP 800-57, Part 1.
+    3. Obtain a string seed of (2 * security_strength) bits from an RBG that
+       supports the security_strength.
+    4. Return (SUCCESS, seed).
+
+B.3.2.2 Construction of the Provable Primes p and q
+  Input:
+    nlen - The intended bit length of the modulus n.
+    e - The public verification exponent.
+    seed - The seed obtained using the method in Appendix B.3.2.1.
+  Output:
+    status - The status of the generation process, where status is either
+             SUCCESS or FAILURE. When FAILURE is returned, zero values
+             shall be returned as the other parameters.
+    p and q - The private prime factors of n.
+  Process:
+    1. If nlen is neither 2048 nor 3072, then return (FAILURE, 0, 0).
+    2. If ((e ≤ 2^16) OR (e ≥ 2^256) OR (e is not odd)), then
+       return (FAILURE, 0, 0).
+    3. Set the value of security_strength in accordance with the value of
+       nlen, as specified in SP 800-57, Part 1.
+    4. If (len(seed) ≠ 2 * security_strength), then return (FAILURE, 0, 0).
+    5. working_seed = seed.
+    6. Generate p:
+      6.1 Using L = nlen/2, N1 = 1, N2 = 1, first_seed = working_seed and e,
+          use the provable prime construction method in Appendix C.10 to obtain
+          p and pseed. If FAILURE is returned, then return (FAILURE, 0, 0).
+      6.2 working_seed = pseed.
+    7. Generate q:
+      7.1 Using L = nlen/2, N1 = 1, N2 = 1, first_seed = working_seed and e,
+          use the provable prime construction method in Appendix C.10 to obtain
+          q and qseed. If FAILURE is returned, then return (FAILURE, 0, 0).
+      7.2 working_seed = qseed.
+    8. If (|p – q| ≤ 2^(nlen/2 – 100)), then go to step 7.
+    9. Zeroize the internally generated seeds:
+      9.1 pseed = 0;
+      9.2 qseed = 0;
+      9.3 working_seed = 0.
+    10. Return (SUCCESS, p, q).
+
+//==========//
+  APPENDIX C
+//==========//
+
+C.6 Shawe-Taylor Random_Prime Routine
+Let Hash( ) be the selected hash function, and let outlen be the bit length
+of the hash function output block. The following process or its equivalent
+shall be used to generate a prime number for this constructive method.
+
+ST_Random_Prime ( ):
+  Input:
+    length - The length of the prime to be generated.
+    input_seed - The seed to be used for the generation of the requested prime.
+  Output:
+    status - The status returned from the generation routine, where status
+             is either SUCCESS or FAILURE. If FAILURE is returned, then zeros
+             are returned as the other output values.
+    prime - The requested prime.
+    prime_seed - A seed determined during generation.
+    prime_gen_counter - (Optional) A counter determined during the generation
+                        of the prime.
+  Process:
+    1. If (length < 2), then return (FAILURE, 0, 0 {, 0}).
+    2. If (length ≥ 33), then go to step 14.
+    3. prime_seed = input_seed.
+    4. prime_gen_counter = 0.
+  Comment: Generate a pseudorandom integer c of length bits.
+    5. c = Hash(prime_seed) ⊕ Hash(prime_seed + 1).
+    6. c = 2^(length – 1) + (c mod 2^(length – 1)).
+    7. c = (2 ∗ floor(c / 2) ) + 1.
+  Comment: Set prime to the least odd integer greater than or equal to c.
+    8. prime_gen_counter = prime_gen_counter + 1.
+    9. prime_seed = prime_seed + 2.
+    10. Perform a deterministic primality test on c. For example, since c is
+        small, its primality can be tested by trial division. See Appendix C.7.
+    11. If (c is a prime number), then
+      11.1 prime = c.
+      11.2 Return (SUCCESS, prime, prime_seed {, prime_gen_counter}).
+    12. If (prime_gen_counter > (4 ∗ length)), then
+        return (FAILURE, 0, 0 {, 0}).
+    13. Go to step 5.
+    14. (status, c0, prime_seed, prime_gen_counter) =
+        (ST_Random_Prime (( floor(length / 2) + 1), input_seed).
+    15. If FAILURE is returned, return (FAILURE, 0, 0 {, 0}).
+    16. iterations = ceil(length / outlen) – 1.
+    17. old_counter = prime_gen_counter.
+  Comment: Generate a pseudorandom integer x in the interval [2length – 1, 2length].
+    18. x = 0.
+    19. For i = 0 to iterations do
+      x = x + (Hash(prime_seed + i) ∗ 2^(i × outlen)).
+    20. prime_seed = prime_seed + iterations + 1.
+    21. x = 2^(length – 1) + (x mod 2^(length – 1)).
+  Comment: Generate a candidate prime c in the interval [2length – 1, 2length].
+    22. t = ceil(x / (2c0)).
+    23. If (2tc0 + 1 > 2^length), then t = ceil(2^(length – 1) / (2c0)).
+    24. c = 2tc0 + 1.
+    25. prime_gen_counter = prime_gen_counter + 1.
+  Comment: Test the candidate prime c for primality; first pick an integer a between 2 and c – 2.
+    26. a = 0.
+    27. For i = 0 to iterations do
+      a = a + (Hash(prime_seed + i) ∗ 2^(i * outlen)).
+    28. prime_seed = prime_seed + iterations + 1.
+    29. a = 2 + (a mod (c – 3)).
+    30. z = a^(2t) mod c.
+    31. If ((1 = GCD(z – 1, c)) and (1 = z^c0 mod c)), then
+      31.1 prime = c.
+      31.2 Return (SUCCESS, prime, prime_seed {, prime_gen_counter}).
+    32. If (prime_gen_counter ≥ ((4 ∗ length) + old_counter)), then return (FAILURE, 0, 0 {, 0}).
+    33. t = t + 1.
+    34. Go to step 23.
+
+C.7 - Trial Division (Primality Test)
+  1. Prepare a table of primes less than sqrt(c). This can be done by applying
+     the sieve procedure in Appendix C.8.
+  2. Divide c by every prime in the table. If c is divisible by one of
+     the primes, then declare that c is composite and exit. If convenient,
+     c may be divided by composite numbers. For example, rather than preparing
+     a table of primes, it might be more convenient to divide by all integers
+     except those divisible by 3 or 5.
+  3. Otherwise, declare that c is prime and exit.
+
+C.8 - Sieve Procedure (Prepare known primes)
+  A sieve procedure is described as follows: Given a sequence of integers
+  Y0, Y0 + 1, … , Y0 + J, a sieve will identify the integers in the sequence
+  that are divisible by primes up to some selected limit.
+
+  Note that the definitions of the mathematical symbols in this process
+  (e.g., h, L, M, p) are internal to this process only, and should not be
+  confused with their use elsewhere in this Standard.
+
+  Start by selecting a factor base of all the primes pj, from 2 up to
+  some selected limit L. The value of L is arbitrary and may be determined
+  by computer limitations. A good, typical value of L would be anywhere
+  from 10^3 to 10^5.
+    1. Compute Sj = Y0 mod pj for all pj in the factor base.
+    2. Initialize an array of length J + 1 to zero.
+    3. Starting at Y0 – Sj + pj , let every pjth element of the array be
+       set to 1. Do this for the entire length of the array and for every j.
+    4. When finished, every location in the array that has the value 1
+       is divisible by some small prime, and is therefore a composite.
+
+  The array can be either a bit array for compactness when memory is
+  small, or a byte array for speed when memory is readily available.
+  There is no need to sieve the entire sieve interval at once. The array
+  can be partitioned into suitably small pieces, sieving each piece before
+  going on to the next piece. When finished, every location with the value 0
+  is a candidate for prime testing.
+
+  The amount of work for this procedure is approximately M log log L,
+  where M is the length of the sieve interval; this is a very efficient
+  procedure for removing composite candidates for primality testing.
+  If L = 10^5, the sieve will remove about 96% of all composites.
+
+  In some cases, rather than having a set of consecutive integers to
+  sieve, the set of integers to be tested consists of integers lying in
+  an arithmetic progression Y0, Y0 + h, Y0 + 2h, …, Y0 + Jh, where h is
+  large and not divisible by any primes in the factor base.
+    1. Select a factor base and initialize an array of length J + 1 to 0.
+    2. Compute Sj =Y0 mod pj for all pj in the factor base.
+    3. Compute Tj = h mod pj and r = – Sj Tj^–1 mod pj.
+    4. Starting at Y0 + r, let every pjth element of the array be
+       set to 1. Do this for the entire length of the array and
+       for every j. Note that the position Y0 + r in the array
+       actually denotes the number Y0 + rh.
+    5. When finished, every location in the array that has the
+       value 1 is divisible by some small prime and is therefore composite.
+  Note: The prime “2” takes the longest amount of time (M/2) to sieve,
+        since it touches the most locations in the sieve array. An easy
+        optimization is to combine the initialization of the sieve array with
+        the sieving of the prime “2”. It is also possible to sieve the prime
+        “3” during initialization. These optimizations can save about 1/3 of
+        the total sieve time.
+
+C.10 Construct a Provable Prime (possibly with Conditions),
+          Based on Contemporaneously Constructed Auxiliary Provable Primes
+
+  The following process (or its equivalent) shall be used to generate an
+  L-bit provable prime p (a candidate for one of the prime factors of
+  an RSA modulus). Note that the use of p in this specification is used
+  generically; both RSA prime factors p and q may be generated using this
+  method.
+
+  If a so-called “strong prime” is required, this process can generate primes
+  p1 and p2 (of specified bit-lengths N1 and N2) that divide p−1 and p+1,
+  respectively. The resulting prime p will satisfy the conditions
+  traditionally required of a strong prime, provided that the requested
+  bit-lengths for p1 and p2 have appropriate sizes.
+
+  Regardless of the bit-lengths selected for p1 and p2, the quantity
+  p−1 will have a prime divisor p0 whose bit-length is slightly more
+  than half that of p. In addition, the quantity p0 −1 will have a prime
+  divisor whose bit-length is slightly more than half that of p0.
+
+  This algorithm requires that N1 + N2 ≤ L – ceil(L/2) – 4. Values for N1
+  and N2 should be chosen such that N1 + N2 ≤ (L/2) – log2(L) – 7, to ensure
+  that the algorithm can generate as many as 5L distinct candidates for p.
+
+  Let Hash be the selected hash function to be used, and let outlen be the
+  bit length of the hash function output block.
+
+  Provable_Prime_Construction():
+  Input:
+    1. L - A positive integer equal to the requested bit-length for p. Note that
+           acceptable values for L= nlen/2 are computed as specified in
+           Appendix B.3.1, criteria 2(b) and (c), with nlen assuming a value
+           specified in Table B.1.
+    2. N1 - A positive integer equal to the requested bit-length for p1.
+       If N1 ≥ 2, then p1 is an odd prime of N1 bits; otherwise, p1 = 1.
+       Acceptable values for N1 ≥ 2 are provided in Table B.1
+    3. N2 - A positive integer equal to the requested bit-length for p2.
+       If N2 ≥ 2, then p2 is an odd prime of N2 bits; otherwise, p2 = 1.
+       Acceptable values for N2 ≥ 2 are provided in Table B.1
+    4. firstseed - A bit string equal to the first seed to be used.
+    5. e - The public verification exponent.
+  Output:
+    1. status - The status returned from the generation procedure, where
+       status is either SUCCESS or FAILURE. If FAILURE is returned, then
+       zeros are returned as the other output values.
+    2. p, p1, p2 - The required prime p, along with p1 and p2 having the
+       property that p1 divides p−1 and p2 divides p+1.
+    3. pseed - A seed determined during generation.
+  Process:
+    1. If L, N1, and N2 are not acceptable, then, return (FAILURE, 0, 0, 0, 0).
+  Comment: Generate p1 and p2, as well as the prime p0.
+    2. If N1 = 1, then
+      2.1 p1 = 1.
+      2.2 p2seed = firstseed.
+    3. If N1 ≥ 2, then
+      3.1 Using N1 as the length and firstseed as the input_seed, use the
+      random prime generation routine in Appendix C.6 to obtain p1 and p2seed.
+      3.2 If FAILURE is returned, then return (FAILURE, 0, 0, 0, 0).
+    4. If N2 = 1, then
+      4.1 p2 = 1.
+      4.2 p0seed = p2seed.
+    5. If N2 ≥ 2, then
+      5.1 Using N2 as the length and p2seed as the input_seed, use the random prime generation routine in Appendix C.6 to obtain p2 and p0seed.
+      5.2 If FAILURE is returned, then return (FAILURE, 0, 0, 0, 0).
+    6. Using ceil(L / 2) + 1 as the length and p0seed as the input_seed,
+       use the random prime generation routine in Appendix C.6 to obtain p0
+       and pseed. If FAILURE is returned, then return (FAILURE, 0, 0, 0, 0).
+  Comment: Generate a (strong) prime p in the interval [(sqrt(2))(2L−1), 2L −1].
+    7. iterations = ceil(L / outlen) − 1
+    8. pgen_counter = 0.
+  Comment: Generate pseudo-random x in the interval [(sqrt(2))(2^(L−1))−1, 2^(L) −1].
+    9. x = 0.
+    10. For i = 0 to iterations do
+          x = x + (Hash(pseed + i)) ∗ 2^(i * outlen)
+    11. pseed = pseed + iterations + 1.
+    12. x = floor((sqrt(2))(2^(L−1))) + (x mod (2^(L) − floor((sqrt(2))(2^(L−1))))).
+  Comment: Generate a candidate for the prime p.
+    13. If (gcd(p0*p1, p2) ≠ 1), then return (FAILURE, 0, 0, 0, 0).
+    14. Compute y in the interval [1, p2] such that 0 = ( y*p0*p1–1) mod p2.
+    15. t = ceil(((2*y*p0*p1) + x)/(2*p0*p1*p2)).
+    16. If ((2(t*p2 − y)*p0*p1 + 1) > 2^L),
+        then t = ceil((2*y*p0*p1) + floor((sqrt(2))(2^(L−1))) / (2*p0*p1*p2))
+  Comment: p satisfies 0 = ( p–1) mod (2p0 p1) and 0 = ( p+1) mod p2.
+    17. p = 2(t*p2 − y)*p0*p1 + 1.
+    18. pgen_counter = pgen_counter + 1.
+    19. If (GCD(p–1, e) = 1), then
+  Comment: Choose an integer a in the interval [2, p–2].
+      19.1 a = 0
+      19.2 For i = 0 to iterations do
+             a = a + (Hash(pseed + i))∗ 2 i * outlen.
+      19.3 pseed = pseed + iterations + 1.
+      19.4 a = 2 + (a mod (p–3)).
+  Comment: Test p for primality:
+      19.5 z = a^(2(t*p2 − y)*p1) mod p.
+      19.6 If ((1 = GCD(z–1, p)) and (1 = (z^(p0) mod p)), then return
+           (SUCCESS, p, p1, p2, pseed).
+    20. If (pgen_counter ≥ 5L), then return (FAILURE, 0, 0, 0, 0).
+    21. t = t + 1.
+    22. Go to step 16.
+
+////////////////
+/FIPS SP 800-57/
+////////////////
+
+5 - Table 2 - Comparable Strengths
+
+  RSA
+    //This one cannot have provable primes generated, just probable primes
+    k = 1024 : security_strength <= 80
+    //These two are provable primes approved, included in NIST standards
+    k = 2048 : security_strength = 112
+    k = 3072 : security_strength = 128
+    //These two not included in NIST standards for interoperability/efficiency
+    k = 7680 : security_strength = 192
+    k = 15360 : security_strength = 256
+
