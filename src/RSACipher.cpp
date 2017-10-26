@@ -385,16 +385,21 @@ bool RSACipher::genPrimeFromAuxiliaries(int l, int n1, int n2,
     //17. p = 2(t*p2 − y)*p0*p1 + 1.
     p = (t * p2 - y) * p0 * p1 * 2 + 1;
     //18. pGenCounter = pGenCounter + 1.
-    pGenCounter++;
+    mpz_add_ui
     //19. If (GCD(p–1, e) = 1), then
     if (gcd(p - 1, e) == 1)
     {
       //19.1 a = 0
-      mpz_t a = 0;
+      mpz_t a;
+      mpz_t hashOutput;
+      mpz_inits(a, hashOutput);
+      mpz_add_ui(pSeedPlus1, pSeed, 1);
+      hashAlg(hashOutput, pSeedPlus1);
       //19.2 For i = 0 to iterations do: a = a + (Hash(pseed + i))∗ 2 i * outlen.
       for (int i = 0; i < iterations; i++)
       {
-        a += hashAlg(pSeed + 1) * modexp(2, i * outLen, 1);
+        mpz_ui_pow_ui(exp2_iOutLen, 2, i * outLen)
+        mpz_addmul(a, hashOutput, exp2_iOutLen);
       }
       //19.3 pSeed = pSeed + iterations + 1.
       pSeed += iterations + 1;
