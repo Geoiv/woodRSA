@@ -42,6 +42,7 @@ class RSACipher
 
     void hashAlg(mpz_t outputX, const mpz_t inputX);
     std::string genRandBits(int stringSize);
+    bool sieveProcedure(mpz_t limitVal);
     bool primalityTest(mpz_t potentialPrime);
     bool randomPrime(int length, mpz_t seed, mpz_t outputPrime,
       mpz_t outputSeed);
