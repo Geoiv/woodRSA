@@ -5,6 +5,7 @@ using namespace std;
 
 vector<vector<char*>> SHA256::padParseInput(char* inputBinary, int l)
 {
+  //Padding
   if (l % blockSize != 0)
   {
     const int finalPaddingBits = 64;
@@ -24,6 +25,7 @@ vector<vector<char*>> SHA256::padParseInput(char* inputBinary, int l)
     }
   }
 
+  //Parsing into blocks of words
   vector<vector<char*>> inputBlocks;
   int blockCount = l / blockSize;
   const int bitsInByte = 8;
@@ -40,4 +42,9 @@ vector<vector<char*>> SHA256::padParseInput(char* inputBinary, int l)
     inputBlocks.push_back(tempVect);
   }
   return inputBlocks;
+}
+
+void SHA256::hash(char* inputBinary, int l)
+{
+  vector<vector<char*>> inputBlocks = padParseInput(inputBinary, l);
 }

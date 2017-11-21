@@ -7,7 +7,10 @@ RSACipher.hpp - George Wood
 
 #include <string>
 #include <map>
-#include "gmp/gmp.h"
+#include <gmpxx.h>
+
+  typedef mpz_class BigInt;
+  typedef mpf_class BigFloat;
 
 class RSACipher
 {
@@ -31,33 +34,32 @@ class RSACipher
       {nLen1, s1},
       {nLen2, s2}
     };
-    const int outLen = 512;
     int securityStrength;
-    mpz_t e;
-    mpz_t d;
-    mpz_t n;
+    BigInt e = 0;
+    BigInt d = 0;
+    BigInt n;
     int nLen;
-    mpz_t q;
-    mpz_t p;
+    BigInt p;
+    BigInt q;
 
-    void hashAlg(mpz_t outputX, const mpz_t inputX);
+
+    BigInt hashAlg(const BigInt inputX);
     std::string genRandBits(int stringSize);
-    bool sieveProcedure(mpz_t limitVal);
-    bool primalityTest(mpz_t potentialPrime);
-    bool randomPrime(int length, mpz_t seed, mpz_t outputPrime,
-      mpz_t outputSeed);
-    bool genFirstSeed(mpz_t seed);
-    bool genPrimeFromAuxiliaries(int l, int n1, int n2,
-      mpz_t firstSeed, const mpz_t e, mpz_t outputPrime, mpz_t outputSeed);
-    bool genPrimes(const mpz_t e, const mpz_t seed,
-      mpz_t p, mpz_t q);
+    bool sieveProcedure(BigInt limitVal);
+    bool primalityTest(BigInt potentialPrime);
+    bool randomPrime(const int length, const BigInt seed, BigInt& outputPrime,
+      BigInt& outputSeed);
+    bool genFirstSeed(BigInt& seed);
+    bool genPrimeFromAuxiliaries(const int l, const int n1, const int n2,
+      const BigInt firstSeed, BigInt& outputSeed);
+    bool genPrimes(BigInt seed);
 
   public:
     RSACipher();
     RSACipher(int inputNLen);
     bool genRSAKeys();
-    bool encrypt(mpz_t e, mpz_t n, std::string plainText);
-    bool decrypt(mpz_t d, mpz_t n, std::string cryptText);
+    bool encrypt(std::string plainText);
+    bool decrypt(std::string cryptText);
 };
 
 #endif

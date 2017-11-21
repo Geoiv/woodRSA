@@ -1,0 +1,4 @@
+C:\Users\IV\Dropbox\Fall17\Capstone\woodRSA\src\test.cpp: In function 'int main()':
+C:\Users\IV\Dropbox\Fall17\Capstone\woodRSA\src\test.cpp:14:18: error: conversion from '__gmp_expr<__mpf_struct [1], __gmp_unary_expr<__gmp_expr<__mpf_struct [1], __gmp_binary_expr<__gmp_expr<__mpf_struct [1], __mpf_struct [1]>, __gmp_expr<__mpz_struct [1], __gmp_binary_expr<long int, __gmp_expr<__mpz_struct [1], __mpz_struct [1]>, __gmp_binary_multiplies> >, __gmp_binary_divides> >, __gmp_ceil_function> >' to non-scalar type 'BigInt {aka __gmp_expr<__mpz_struct [1], __mpz_struct [1]>}' requested
+   BigInt t = ceil(tempFloat / (2 * c0));
+              ~~~~^~~~~~~~~~~~~~~~~~~~~~
