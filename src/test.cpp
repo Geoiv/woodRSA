@@ -8,10 +8,7 @@ using namespace std;
 
 int main()
 {
-  BigInt c0 = 5;
-  BigInt x = 9;
-  BigFloat tempFloat = x;
-  //BigInt t = ceil(tempFloat / c0);
-
-  //cout << t << endl;
+  BigInt x = 5;
+  string binary = x.get_str(2);
+  cout << x << " " << binary << " " << binary.length() << endl;
 }

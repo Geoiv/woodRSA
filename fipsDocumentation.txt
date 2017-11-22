@@ -280,7 +280,8 @@ C.10 Construct a Provable Prime (possibly with Conditions),
       4.1 p2 = 1.
       4.2 p0seed = p2seed.
     5. If N2 ≥ 2, then
-      5.1 Using N2 as the length and p2seed as the input_seed, use the random prime generation routine in Appendix C.6 to obtain p2 and p0seed.
+      5.1 Using N2 as the length and p2seed as the input_seed, use the
+      random prime generation routine in Appendix C.6 to obtain p2 and p0seed.
       5.2 If FAILURE is returned, then return (FAILURE, 0, 0, 0, 0).
     6. Using ceil(L / 2) + 1 as the length and p0seed as the input_seed,
        use the random prime generation routine in Appendix C.6 to obtain p0

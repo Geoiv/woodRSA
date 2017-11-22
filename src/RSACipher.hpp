@@ -6,6 +6,7 @@ RSACipher.hpp - George Wood
 #define __RSACIPHER_H__
 
 #include <string>
+#include <vector>
 #include <map>
 #include <gmpxx.h>
 
@@ -45,8 +46,8 @@ class RSACipher
 
     BigInt hashAlg(const BigInt inputX);
     std::string genRandBits(int stringSize);
-    bool sieveProcedure(BigInt limitVal);
-    bool primalityTest(BigInt potentialPrime);
+    std::vector<BigInt> sieveProcedure(BigInt limitVal);
+    bool primalityTest(BigInt c);
     bool randomPrime(const int length, const BigInt seed, BigInt& outputPrime,
       BigInt& outputSeed);
     bool genFirstSeed(BigInt& seed);
