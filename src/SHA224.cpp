@@ -196,7 +196,7 @@ string SHA256::hash(string& inputHex)
 
   string hashHex = "";
 
-  for (uint i = 0; i < workingVarCount; i++)
+  for (uint i = 0; i < workingVarCount - 1; i++)
   {
     stringstream hexStream;
     hexStream << hex << hashVals[i];

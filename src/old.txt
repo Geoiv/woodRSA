@@ -1,0 +1,17 @@
+// string RSACipher::genRandBits(uint stringSize)
+// {
+//   string outputString = "";
+//   string currentString = "";
+//   string oldString = "";
+//   for (uint i = 0; i < stringSize; i++)
+//   {
+//     while (currentString.compare(oldString) == 0)
+//     {
+//       currentString = to_string(rand() % 2);
+//     }
+//
+//     outputString += currentString;
+//     oldString = currentString;
+//   }
+//   return outputString;
+// }

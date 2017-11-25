@@ -14,14 +14,14 @@ SHA256.hpp - George Wood
 class SHA256
 {
   private:
-    const uint h0 = 0x6a09e667;
-    const uint h1 = 0xbb67ae85;
-    const uint h2 = 0x3c6ef372;
-    const uint h3 = 0xa54ff53a;
-    const uint h4 = 0x510e527f;
-    const uint h5 = 0x9b05688c;
-    const uint h6 = 0x1f83d9ab;
-    const uint h7 = 0x5be0cd19;
+    const uint h0 = 0xc1059ed8;
+    const uint h1 = 0x367cd507;
+    const uint h2 = 0x3070dd17;
+    const uint h3 = 0xf70e5939;
+    const uint h4 = 0xffc00b31;
+    const uint h5 = 0x68581511;
+    const uint h6 = 0x64f98fa7;
+    const uint h7 = 0xbefa4fa4;
 
     const std::vector<uint> K = {
                               0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,

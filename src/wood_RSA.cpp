@@ -7,34 +7,162 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 using namespace std;
 
 
+const short PLAIN_INPUT = 0;
+const short DECIMAL_INPUT = 1;
+const short BINARY_INPUT = 2;
+const short HEX_INPUT = 3;
 
-bool RSA()
+string getTextFromUser()
 {
-  RSACipher cipher = RSACipher();
+  string outputText = "";
+  return outputText;
+}
+string getTextFromFile()
+{
+  string outputText = "";
+  return outputText;
+}
 
-  if (!cipher.genRSAKeys())
+void encryptionMenu(RSACipher& cipher)
+{
+  cout << "Encryption selected." << endl;
+  //Number of iterations
+
+  string menuString = "Text input or input from file? \n1. Text Input"
+    "\n2. File Input\n";
+
+  //User input choice
+  string userChoice;
+
+  //Loops until valid input is given
+  bool smallLoop = true;
+  while (smallLoop)
   {
-    return false;
-  }
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
 
-  return true;
+    //User wants to input text
+    if (userChoice == "1")
+    {
+      smallLoop = false;
+      string plainText = getTextFromUser();
+    }
+    //User wants file input
+    else if (userChoice == "2")
+    {
+        smallLoop = false;
+        string plainText = getTextFromFile();
+    }
+    else if (userChoice == "3")
+    {
+      smallLoop = false;
+    }
+    else
+    {
+      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
+    }
+  }
+}
+
+void decryptionMenu(RSACipher& cipher)
+{
+  cout << "Decryption selected." << endl;
+  //Number of iterations
+
+  string menuString = "Text input or input from file? \n1. Text Input"
+    "\n2. File Input";
+
+  //User input choice
+  string userChoice;
+
+  //Loops until valid input is given
+  bool smallLoop = true;
+  while (smallLoop)
+  {
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+
+    //User wants to input text
+    if (userChoice == "1")
+    {
+      smallLoop = false;
+      string cipherText = getTextFromUser();
+    }
+    //User wants file input
+    else if (userChoice == "2")
+    {
+      smallLoop = false;
+      string cipherText = getTextFromFile();
+    }
+    else if (userChoice == "3")
+    {
+      smallLoop = false;
+    }
+    else
+    {
+      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
+    }
+  }
+}
+
+void keyOptMenu(RSACipher& cipher)
+{
+  cout << "Key Options selected." << endl;
+  //Number of iterations
+
+  string menuString = "Select from the following options:\n1. Generate keys"
+    "\n2. View keys\n3. Return to main menu";
+
+  //User input choice
+  string userChoice;
+
+  //Loops until valid input is given
+  bool smallLoop = true;
+  while (smallLoop)
+  {
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+
+    //User wants to input text
+    if (userChoice == "1")
+    {
+      smallLoop = false;
+      cipher.genKeys();
+    }
+    //User wants file input
+    else if (userChoice == "2")
+    {
+        cipher.displayKeyInfo();
+    }
+    else if (userChoice == "3")
+    {
+      smallLoop = false;
+    }
+    else
+    {
+      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
+    }
+  }
 }
 
 int main()
 {
-  //srand(time(NULL));
   cout << "FIPS COMPLIANT RSA - GEORGE WOOD" << endl;
 
-  //Displays title
-  cout << "Q-LEARNING AND SARSA" << endl;
+  RSACipher cipher;
 
   //User input choice
   string userChoice;
 
   //Main menu string
-  string menuString1 = "\nPlease select your desired option "
-    "(or input 'q' to quit): \n1. Encryption\n2. Decryption\n"
-    "\n3. Key Generation\n";
+  string menuString = "\nPlease select your desired option: "
+    "\n1. Encryption\n2. Decryption\n3. Key Options\n4. Quit";
 
   //Repeatedly prompts user for desired function until
   //user quits or closes the program.
@@ -42,84 +170,32 @@ int main()
   while (keepLoop)
   {
     //Displays menu
-    cout << menuString1 << endl;
-
+    cout << menuString << endl;
+    cout << "Choice: ";
     //Gets user menu choice
     getline(cin, userChoice);
 
-    //User is quitting
-    if (userChoice == "q" || userChoice == "Q")
-    {
-      keepLoop = false;
-    }
-
     //User is not quitting, wants q-learning
-    else if (userChoice == "1")
+    if (userChoice == "1")
     {
-      cout << "Encryption selected." << endl;
-      //Number of iterations
-      int learningIterations;
-      string learningItrStr;
-
-      cout << "Text input or input from file? \n1. Text Input \n"
-        "\n2. File Input\n"; 
-      //Loops until valid input is given
-      bool smallLoop = true;
-      while (smallLoop)
-      {
-        //Gets user specified iteration count
-        getline(cin, learningItrStr);
-        //If input is not entirely numbers
-        if (!(std::all_of(learningItrStr.begin(), learningItrStr.end(),
-            ::isdigit)))
-        {
-          cout << "\nInput must be an integer. Try again: ";
-        }
-        //Input is entirely numbers
-        else
-        {
-          learningIterations = stoi(learningItrStr);
-          smallLoop = false;
-        }
-      }
-      //Begins q-learning with the specified number of iterations
-      reinforcmentLearning(learningIterations, Q_LEARN_MODE);
+      encryptionMenu(cipher);
     }
     //User is not quitting, wants SARSA
     else if (userChoice == "2")
     {
-      cout << "SARSA selected." << endl;
-      //Number of iterations
-      int learningIterations;
-      string learningItrStr;
-
-      cout << "Input number of learning iterations: ";
-      //Loops until valid input is given
-      bool smallLoop = true;
-      while (smallLoop)
-      {
-        //Gets user specified iteration count
-        getline(cin, learningItrStr);
-        //If input is not entirely numbers
-        if (!(std::all_of(learningItrStr.begin(), learningItrStr.end(),
-            ::isdigit)))
-        {
-          cout << "\nInput must be an integer. Try again: ";
-        }
-        //Input is entirely numbers
-        else
-        {
-          learningIterations = stoi(learningItrStr);
-          smallLoop = false;
-        }
-      }
-      //Begins SARSA with the specified number of iterations
-      reinforcmentLearning(learningIterations, SARSA_MODE);
+      decryptionMenu(cipher);
     }
-    //Invalid input
+    else if (userChoice == "3")
+    {
+      keyOptMenu(cipher);
+    }
+    else if (userChoice == "4")
+    {
+      keepLoop = false;
+    }
     else
     {
-      cout << "Input must be either 1, 2, or 'q'. Try again: ";
+      cout << "Input must be either 1, 2, 3, or 4. Try again. " << endl;
     }
   }
 }
