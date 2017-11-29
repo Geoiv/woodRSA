@@ -2,19 +2,18 @@
 #include <iostream>
 #include <sstream>
 #include <math.h>
-#include "SHA256.hpp"
+#include "SHA224.hpp"
 using namespace std;
 
-SHA256::SHA256()
+SHA224::SHA224()
 {
 
 }
 
-vector<uint> SHA256::padParseInput(string& inputHex)
+vector<uint> SHA224::padParseInput(string& inputHex)
 {
   //Padding
   const uint bitsInHexChar = 4;
-  const uint hexCharsInWord = 8;
   const uint hexBase = 16;
   const uint finalPaddingBits = 64;
   const uint finalPaddingChars = finalPaddingBits / bitsInHexChar;
@@ -56,12 +55,12 @@ vector<uint> SHA256::padParseInput(string& inputHex)
   return inputWords;
 }
 
-uint SHA256::rotr(uint x, uint n)
+uint SHA224::rotr(uint x, uint n)
 {
   return ((x >> n) | (x << (bitsInWord - n)));
 }
 
-uint SHA256::bSigmaSub0(uint x)
+uint SHA224::bSigmaSub0(uint x)
 {
   const uint rotVal0 = 2;
   const uint rotVal1 = 13;
@@ -72,7 +71,7 @@ uint SHA256::bSigmaSub0(uint x)
   uint outputX = rotrX0^rotrX1^rotrX2;
   return outputX;
 }
-uint SHA256::bSigmaSub1(uint x)
+uint SHA224::bSigmaSub1(uint x)
 {
   const uint rotVal0 = 6;
   const uint rotVal1 = 11;
@@ -83,7 +82,7 @@ uint SHA256::bSigmaSub1(uint x)
   uint outputX = rotrX0^rotrX1^rotrX2;
   return outputX;
 }
-uint SHA256::sSigmaSub0(uint x)
+uint SHA224::sSigmaSub0(uint x)
 {
   const uint rotVal0 = 7;
   const uint rotVal1 = 18;
@@ -95,7 +94,7 @@ uint SHA256::sSigmaSub0(uint x)
   return outputX;
 }
 
-uint SHA256::sSigmaSub1(uint x)
+uint SHA224::sSigmaSub1(uint x)
 {
   const uint rotVal0 = 17;
   const uint rotVal1 = 19;
@@ -107,17 +106,18 @@ uint SHA256::sSigmaSub1(uint x)
   return outputX;
 }
 
-uint SHA256::chFunc(uint x, uint y, uint z)
+uint SHA224::chFunc(uint x, uint y, uint z)
 {
   return (x & y)^(~x & z);
 }
-uint SHA256::majFunc(uint x, uint y, uint z)
+uint SHA224::majFunc(uint x, uint y, uint z)
 {
   return (x & y)^(x & z)^(y & z);
 }
 
-string SHA256::hash(string& inputHex)
+string SHA224::hash(string inputHex)
 {
+  const uint hexCharsInWord = 8;
   const uint messageSchedFirst = 16;
   const uint messageSchedSecond = 64;
   const uint roundCount = 64;
@@ -201,6 +201,10 @@ string SHA256::hash(string& inputHex)
     stringstream hexStream;
     hexStream << hex << hashVals[i];
     string tempHexString = hexStream.str();
+    for (uint j = 0; j < hexCharsInWord - tempHexString.size(); j++)
+    {
+      tempHexString = '0' + tempHexString;
+    }
     hashHex += tempHexString;
   }
   return hashHex;

@@ -1,5 +1,5 @@
 /*
-RSACipher.cpp - George Wood - RSA 2048 and SHA 256
+RSACipher.cpp - George Wood - RSA 2048 and SHA 224
 */
 
 #include <random>
@@ -8,7 +8,7 @@ RSACipher.cpp - George Wood - RSA 2048 and SHA 256
 #include <climits>
 #include <iostream>
 #include "RSACipher.hpp"
-#include "SHA256.hpp"
+#include "SHA224.hpp"
 using namespace std;
 
 //TODO approvaed random bit generator?
@@ -37,7 +37,7 @@ BigInt RSACipher::hashAlg(const BigInt inputX)
 {
   //TODO maybe use SHA224?
   uint hexBase = 16;
-  SHA256 sha;
+  SHA224 sha;
   string inputHex = inputX.get_str(hexBase);
   //Length of string returned  by above function is strlen + 1
   string hashedHex = sha.hash(inputHex);
@@ -151,11 +151,11 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
       //9.primeSeed += 2
       primeSeed += 2;
       //11. if c is prime,
-      cout << endl << " new c attempt: " << endl << c << endl;
+      // cout << endl << " new c attempt: " << endl << c << endl;
       //cout << "testing primality of " << c << endl;
       if (primalityTest(c))
       {
-        cout << "prime!" << endl;
+        // cout << "prime!" << endl;
         //11.1&2 outputPrime = c, return success
         outputPrime = c;
         return true;
@@ -164,7 +164,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
       //12. if pGenCounter > 4*length, return failure
       if (cmp(pGenCounter, (4 * length)) > 0)
       {
-        cout << "here" << endl;
         return false;
       }
       //13. Go to step 5
@@ -179,8 +178,9 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     //15. If failure is returned, return failure
     return false;
   }
+  // cout << "c0: " << c0 << endl;
   //16. iterations = ceil(length / outlen) - 1;
-  uint outLen = SHA256::outputBlockSize;
+  uint outLen = SHA224::outputBlockSize;
   uint iterations = ceil((float)length / outLen) - 1;
   //17. oldCounter = pGenCounter
   BigInt oldCounter = pGenCounter;
@@ -213,6 +213,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     }
     //24. c = 2tc0 + 1
     c = (2 * t * c0) + 1;
+    // cout << "c after computation: " << c << endl;
     //25. pGenCounter++
     pGenCounter++;
     //26. a = 0
@@ -243,6 +244,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     {
       //31.1 prime = c
       outputPrime = c;
+      // cout << "  Output prime: " << outputPrime << endl;
       //31.2 return success
       return true;
     }
@@ -335,10 +337,15 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   {
     return false;
   }
+  // cout << ceil((float)l/2) << endl;
+  // cout << mpz_sizeinbase(p0.get_mpz_t(), 2) << endl;
+
   // cout << "p0: " << p0 << endl;
+  // cout << "p1: " << p1 << endl;
+  // cout << "p2: " << p2 << endl;
   //7. iterations = ceil(l / outLen) − 1, where outLen is the length of the
   //hash function output block
-  uint outLen = SHA256::outputBlockSize;
+  uint outLen = SHA224::outputBlockSize;
   uint iterations = ceil((float)l / outLen) - 1;
   //8. pGenCounter = 0
   BigInt pGenCounter = 0;
@@ -373,7 +380,7 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
 
   //14. Compute y in the interval [1, p2] such that 0 = (y*p0*p1–1) mod p2.
-  BigInt y;
+  BigInt y = 0;
   BigInt p0p1 = p0 * p1;
 
   if (!mpz_invert(y.get_mpz_t(), p0p1.get_mpz_t(), p2.get_mpz_t()))
@@ -389,17 +396,21 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   // cout << endl << "y: " << y << endl;
 
   //15. t = ceil(((2*y*p0*p1) + x)/(2*p0*p1*p2)).
+  // cout << "y: " << y << endl;
+  // cout << "x: " << x << endl;
   BigInt twoxYxP0xP1 = (2 * y * p0 * p1);
   BigInt twoxP0xP1xP2 = (2 * p0 * p1 * p2);
   leftHalf = twoxYxP0xP1 + x;
   rightHalf = twoxP0xP1xP2;
   BigInt t;
   mpz_cdiv_q(t.get_mpz_t(), leftHalf.get_mpz_t(), rightHalf.get_mpz_t());
+  // cout << "t: " << t << endl;
+
   while (true)
   {
     //16. If ((2(t*p2 − y)*p0*p1 + 1) > 2^l)
-    BigInt possibleP = ((2 * ((t * p2) - y) * p0 * p1) + 1);
-    if (cmp(possibleP, exp2_l) > 0)
+    BigInt compVal = ((2 * ((t * p2) - y) * p0 * p1) + 1);
+    if (cmp(compVal, exp2_l) > 0)
     {
       //then t = ceil(((2*y*p0*p1) + floor((sqrt(2))(2^(L−1)))) / (2*p0*p1*p2))
       leftHalf = twoxYxP0xP1 + floorRoot2xExp2_lMinus1;
@@ -449,13 +460,14 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
     //20. If (pgen_counter ≥ 5L), then return failure
     if (cmp(pGenCounter, l * 5) >= 0)
     {
-      cout << "Too many iterations generating q. Greater than 5L." << endl;
+      cout << "Too many iterations generating prime. Greater than 5L." << endl;
       return false;
     }
     //21. t = t + 1
     t++;
     //22. Go to step 16.
   }
+
   return true;
 }
 
@@ -479,30 +491,29 @@ bool RSACipher::genPrimes(const BigInt seed)
   //5. working_seed = seed.
   BigInt workingSeed = seed;
   // cout << "ps working seed: " << workingSeed << endl;
+  // cout << "w: " << workingSeed << endl;
 
-  BigInt pSeed;
-  BigInt qSeed;
+  BigInt pSeed = 0;
+  BigInt qSeed = 0;
 
-  BigInt outputPrime;
 
   uint l = nLen / 2;
   uint n1 = 1;
   uint n2 = 1;
-  BigInt firstSeed = workingSeed;
 
   //6. Generate p:
   //6.1 Using l = nlen/2, n1 = 1, n2 = 1, firstSeed = working_seed and e,
   //use the provable prime construction method in Appendix C.10 to obtain p and
   //pSeed. If failure is returned, then return failure
 
-  if (!genPrimeFromAuxiliaries(l, n1, n2, firstSeed, outputPrime, pSeed))
+  if (!genPrimeFromAuxiliaries(l, n1, n2, workingSeed, p, pSeed))
   {
     cout << "Generation of the seed for prime p generation failed!" << endl;
     return false;
   }
 
-  p = outputPrime;
-  cout << "p: " << p << endl;
+  cout << "p:  " << p << endl;
+  //cout << "ps: " << mpz_sizeinbase(p.get_mpz_t(), 2) << endl;
 
   //6.2 working_seed = pseed.
   workingSeed = pSeed;
@@ -511,8 +522,9 @@ bool RSACipher::genPrimes(const BigInt seed)
   BigInt absVal = 0;
   BigInt comparisonVal;
   //ComparisonVal = 2^((nLen/2) - 100)
+  // bool firstTime = true;
+  // BigInt firstQ;
   mpz_ui_pow_ui(comparisonVal.get_mpz_t(), 2, ((nLen / 2) - 100));
-
   while(cmp(absVal, comparisonVal) <= 0)
   {
     //7. Generate q:
@@ -522,19 +534,27 @@ bool RSACipher::genPrimes(const BigInt seed)
     l = nLen / 2;
     n1 = 1;
     n2 = 1;
-    firstSeed = workingSeed;
 
-    if (!genPrimeFromAuxiliaries(l, n1, n2, firstSeed, outputPrime, qSeed))
+    if (!genPrimeFromAuxiliaries(l, n1, n2, workingSeed, q, qSeed))
     {
       cout << "Generation of the seed for prime q generation failed!" << endl;
       return false;
     }
-
-    q = outputPrime;
+    // if (firstTime)
+    // {
+    //   firstQ = q;
+    //   firstTime = false;
+    // }
+    // else
+    // {
+    //   cout << q - firstQ << endl;
+    // }
+    // cout << workingSeed - qSeed << endl;
+    //cout << "qs: " << mpz_sizeinbase(q.get_mpz_t(), 2) << endl;
 
     //7.2 working_seed = qseed.
     workingSeed = qSeed;
-    // cout << "new q working seed: " << workingSeed << endl;
+    // cout << "new q working seed: " << endl << workingSeed << endl;
 
     //8. If ( |p – q| ≤ 2^(nlen/2 – 100)), then go to step 7.
     absVal = abs(p - q);
@@ -553,17 +573,11 @@ bool RSACipher::genPrimes(const BigInt seed)
 
 bool RSACipher::genKeys()
 {
-  // //Initializes seed for random number gen
-  // random_device randSeeder;
-  // //Creates random generator engine using Mersenne-Twister engine
-  // mt19937 numGen(randSeeder());
-  // //Number distribution to select from, 'guaranteed unbiased'
-  // uniform_int_distribution<uint> unbiasedGen(pow(2, 16), UINT_MAX);
+  const uint binaryBase = 2;
   gmp_randclass randGen(gmp_randinit_mt);
   randGen.seed(clock());
   //Seed used for generating primes
   BigInt seed = randGen.get_z_bits(securityStrength * 2);
-
   //Generates seed for prime generation
   // if(!genFirstSeed(seed))
   // {
@@ -589,6 +603,8 @@ bool RSACipher::genKeys()
     cout << "Generation of prime values p & q failed!" << endl;
     return false;
   }
+
+
   //Gets n value - n = pq
   n = p * q;
 

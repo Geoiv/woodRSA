@@ -2,8 +2,8 @@
 SHA256.hpp - George Wood
 */
 
-#ifndef __SHA256_H__
-#define __SHA256_H__
+#ifndef __SHA224_H__
+#define __SHA224_H__
 
 
 #include <vector>
@@ -11,7 +11,7 @@ SHA256.hpp - George Wood
 
   typedef unsigned int uint;
 
-class SHA256
+class SHA224
 {
   private:
     const uint h0 = 0xc1059ed8;
@@ -54,8 +54,9 @@ class SHA256
     static const uint outputBlockSize = 256;
     static const uint bitsInWord = 32;
     static const uint wordsInBlock = 16;
-    SHA256();
-    std::string hash(std::string& inputHex);
+    const uint hexCharsInWord = 8;
+    SHA224();
+    std::string hash(std::string inputHex);
 };
 
 #endif

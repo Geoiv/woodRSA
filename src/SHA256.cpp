@@ -14,7 +14,6 @@ vector<uint> SHA256::padParseInput(string& inputHex)
 {
   //Padding
   const uint bitsInHexChar = 4;
-  const uint hexCharsInWord = 8;
   const uint hexBase = 16;
   const uint finalPaddingBits = 64;
   const uint finalPaddingChars = finalPaddingBits / bitsInHexChar;
@@ -116,7 +115,7 @@ uint SHA256::majFunc(uint x, uint y, uint z)
   return (x & y)^(x & z)^(y & z);
 }
 
-string SHA256::hash(string& inputHex)
+string SHA256::hash(string inputHex)
 {
   const uint messageSchedFirst = 16;
   const uint messageSchedSecond = 64;
@@ -201,6 +200,10 @@ string SHA256::hash(string& inputHex)
     stringstream hexStream;
     hexStream << hex << hashVals[i];
     string tempHexString = hexStream.str();
+    for (uint j = 0; j < hexCharsInWord - tempHexString.size(); j++)
+    {
+      tempHexString = '0' + tempHexString;
+    }
     hashHex += tempHexString;
   }
   return hashHex;

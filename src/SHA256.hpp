@@ -54,8 +54,9 @@ class SHA256
     static const uint outputBlockSize = 256;
     static const uint bitsInWord = 32;
     static const uint wordsInBlock = 16;
+    const uint hexCharsInWord = 8;
     SHA256();
-    std::string hash(std::string& inputHex);
+    std::string hash(std::string inputHex);
 };
 
 #endif
