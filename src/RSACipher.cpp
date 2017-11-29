@@ -573,7 +573,6 @@ bool RSACipher::genPrimes(const BigInt seed)
 
 bool RSACipher::genKeys()
 {
-  const uint binaryBase = 2;
   gmp_randclass randGen(gmp_randinit_mt);
   randGen.seed(clock());
   //Seed used for generating primes
