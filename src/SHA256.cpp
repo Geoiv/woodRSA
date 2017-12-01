@@ -41,7 +41,6 @@ vector<uint> SHA256::padParseInput(string& inputHex)
     inputHex += "0";
   }
   inputHex += finalPadString;
-  //cout << inputHex << endl;
 
   //Parsing uinto blocks of words
   vector<uint> inputWords;
@@ -163,11 +162,6 @@ string SHA256::hash(string inputHex)
         sigma0WJMinus15 + wJMinus16) % twoExp32;
       W.push_back(newW);
     }
-
-    // for (uint i = 0; i < W.size(); i++)
-    // {
-    //   cout << hex << W.at(i) << endl;
-    // }
 
     for (uint j = 0; j < roundCount; j++)
     {

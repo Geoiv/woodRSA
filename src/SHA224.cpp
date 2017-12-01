@@ -24,7 +24,6 @@ vector<uint> SHA224::padParseInput(string& inputHex)
   string first1 = "80";
   inputHex += "80";
 
-
   uint padFinder1 = (l + first1.size()) % hexBlockSize;
   uint k = padFinder0 - padFinder1;
 
@@ -41,7 +40,6 @@ vector<uint> SHA224::padParseInput(string& inputHex)
     inputHex += "0";
   }
   inputHex += finalPadString;
-  //cout << inputHex << endl;
 
   //Parsing uinto blocks of words
   vector<uint> inputWords;
@@ -164,11 +162,6 @@ string SHA224::hash(string inputHex)
         sigma0WJMinus15 + wJMinus16) % twoExp32;
       W.push_back(newW);
     }
-
-    // for (uint i = 0; i < W.size(); i++)
-    // {
-    //   cout << hex << W.at(i) << endl;
-    // }
 
     for (uint j = 0; j < roundCount; j++)
     {

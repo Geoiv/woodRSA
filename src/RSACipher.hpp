@@ -36,14 +36,14 @@ class RSACipher
       {nLen1, s1},
       {nLen2, s2}
     };
-    uint securityStrength;
+
     BigInt e = 0;
     BigInt d = 0;
-    BigInt n;
-    uint nLen;
     BigInt p;
     BigInt q;
-
+    BigInt n;
+    uint nLen;
+    uint securityStrength;
 
     BigInt hashAlg(const BigInt inputX);
     std::string genRandBits(uint stringSize);

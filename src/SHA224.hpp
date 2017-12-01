@@ -51,7 +51,7 @@ class SHA224
     uint majFunc(uint x, uint y, uint z);
   public:
     static const uint blockSize = 512;
-    static const uint outputBlockSize = 256;
+    static const uint outputBlockSize = 224;
     static const uint bitsInWord = 32;
     static const uint wordsInBlock = 16;
     const uint hexCharsInWord = 8;
