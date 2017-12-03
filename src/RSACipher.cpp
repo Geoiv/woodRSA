@@ -36,7 +36,7 @@ RSACipher::RSACipher(uint inputNLen)
 
 BigInt RSACipher::hashAlg(const BigInt inputX)
 {
-  uint hexBase = 16;
+
   SHA224 sha;
   string inputHex = inputX.get_str(hexBase);
   //Length of string returned  by above function is strlen + 1
@@ -88,22 +88,8 @@ bool RSACipher::primalityTest(BigInt c)
       }
     }
   }
-  // while (testPrime < rootC)
-  // {
-  //   if (gcd(testPrime, c) == 1)
-  //   {
-  //     //cout << "  " << c << " is divisible by " << testPrime << endl;
-  //     return false;
-  //   }
-  //   mpz_nextprime(testPrime.get_mpz_t(), testPrime.get_mpz_t());
-  // }
-  //3. If not divisible, return success
   return true;
 }
-
-
-
-
 
 //Appendix C.6 0 Shawe-Taylor Random Prime Routine
 bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
@@ -117,8 +103,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   BigInt exp2_l;
   mpz_ui_pow_ui(exp2_l.get_mpz_t(), 2, length);
 
-
-  //cout << length << endl;
   //1. If (length < 2), then return failure
   if (length < 2)
   {
@@ -127,7 +111,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   //2. If (length ≥ 33), then go to step 14.
   if (length < 33)
   {
-    // cout << "less than 33" << endl;
     //3. primeSeed = inputSeed
     primeSeed = inputSeed;
     //4. pGenCounter = 0;
@@ -141,8 +124,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
       c = hashAlg(primeSeed)^hashAlg(primeSeed + 1);
       //6. c = 2^length-1 + (c mod 2^length-1)
       c = exp2_lMinus1 + (c % exp2_lMinus1);
-
-
       //7. c = (2 * floor(c / 2)) + 1
       BigFloat cFloat(c);
       c = ((2 * floor(cFloat / 2)) + 1);
@@ -150,21 +131,16 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
       pGenCounter++;
       //9.primeSeed += 2
       primeSeed += 2;
-      // incCount += 2;
       //10. Perform a deterministic primality test on c. For example,
       //since c is small, its primality can be tested by trial division.
       //Appendix C.7.
       //11. if c is prime,
-      // cout << endl << " new c attempt: " << endl << c << endl;
-      //cout << "testing primality of " << c << endl;
       if (primalityTest(c))
       {
-        // cout << "prime!" << endl;
         //11.1&2 outputPrime = c, return success
         outputPrime = c;
         return true;
       }
-
       //12. if pGenCounter > 4*length, return failure
       if (pGenCounter > (4 * length))
       {
@@ -182,7 +158,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     //15. If failure is returned, return failure
     return false;
   }
-  // cout << "c0: " << c0 << endl;
   //16. iterations = ceil(length / outlen) - 1;
   uint outLen = SHA224::outputBlockSize;
   uint iterations = ceil((float)length / outLen) - 1;
@@ -200,7 +175,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   }
   //20. primeSeed += iterations + 1
   primeSeed += iterations + 1;
-  // incCount += iterations + 1;
   //21. x = 2^length-1 + x mod 2^(length-1)
   x = exp2_lMinus1 + (x % exp2_lMinus1);
 
@@ -218,7 +192,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     }
     //24. c = 2tc0 + 1
     c = (2 * t * c0) + 1;
-    // cout << "c after computation: " << c << endl;
     //25. pGenCounter++
     pGenCounter++;
     //26. a = 0
@@ -233,7 +206,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     }
     //28. primeSeed += iterations + 1
     primeSeed += iterations + 1;
-    // incCount += iterations + 1;
     //29. a = 2 + a mod (c - 3)
     a = 2 + (a % (c - 3));
 
@@ -250,7 +222,6 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     {
       //31.1 prime = c
       outputPrime = c;
-      // cout << "  Output prime: " << outputPrime << endl;
       //31.2 return success
       return true;
     }
@@ -296,7 +267,6 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   //2. If n1 == 1
   if (n1 == 1)
   {
-    // cout << "1" << endl;
     //2.1 p1 = 1
     p1 = 1;
     //2.2 p2Seed = firstSeed
@@ -304,13 +274,10 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
   else if (n1 >= 2)
   {
-    // cout << "2" << endl;
     //3.1  Using n1 as the length and firstSeed as the input_seed, use
     //the random prime  generation routine in Appendix C.6 to obtain
     //p1 and p2Seed.
     BigInt temp = 0;
-    // cout << "  generating p1" << endl;
-    // cout << "    seed: " << firstSeed << endl;
     if (!randomPrime(n1, firstSeed, p1, p2Seed, temp))
     {
       //3.2 If failure is returned, return failure
@@ -320,7 +287,6 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   //4. If n2 == 1
   if (n2 == 1)
   {
-    // cout << "3" << endl;
     //4.1 p2 = 1
     p2 = 1;
     //4.2 p0Seed = p2Seed
@@ -328,39 +294,24 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
   else if (n2 >= 2)
   {
-    // cout << "4" << endl;
     //5.1  Using n2 as the length and p2Seed as the inputSeed, use
     //the random prime generation routine in Appendix C.6 to obtain
     // p2 and p0Seed.
     BigInt temp = 0;
-    // cout << "  generating p2" << endl;
-    // cout << "    seed: " << p2Seed << endl;
     if (!randomPrime(n2, p2Seed, p2, p0Seed, temp))
     {
       //5.2 If fairlure is returned, return failure
       return false;
     }
   }
-  // cout << p1 << endl << p2Seed << endl << p2 << endl << p0Seed << endl;
   //6. Using ceil(l / 2) + 1 as the length and p0Seed as the inputSeed,
   //use the random prime generation routine in Appendix C.6 to obtain
   //p0 and primeSeed. If failure is returned, then return failure
   BigInt temp = 0;
-  // cout << "  generating p0" << endl;
-  // cout << "    seed: " << p0Seed << endl;
-  // cout << ceil((float)l/2) + 1 << endl;
-  // cout << p0Seed << endl;
   if (!randomPrime(ceil((float)l/2) + 1, p0Seed, p0, primeSeed, temp))
   {
     return false;
   }
-  // cout << p0 << endl;
-  // cout << ceil((float)l/2) << endl;
-  // cout << mpz_sizeinbase(p0.get_mpz_t(), 2) << endl;
-
-  // cout << "p0: " << p0 << endl;
-  // cout << "p1: " << p1 << endl;
-  // cout << "p2: " << p2 << endl;
   //7. iterations = ceil(l / outLen) − 1, where outLen is the length of the
   //hash function output block
   uint outLen = SHA224::outputBlockSize;
@@ -378,31 +329,20 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
   //11. primeSeed = primeSeed + iterations + 1.
   primeSeed += iterations + 1;
-  // incCount += iterations + 1;
 
   //12. x = floor(sqrt(2)*(2^(l−1))) + (x mod (2^(l) − floor(sqrt(2)(2^(l−1)))))
+
   //floor(sqrt(2)*(2^(l−1)))
   BigFloat exp2_lMinus1Float(exp2_lMinus1);
-
   BigFloat floorRoot2xExp2_lMinus1Float = sqrt(2) * exp2_lMinus1Float;
-
   BigInt floorRoot2xExp2_lMinus1(floor(floorRoot2xExp2_lMinus1Float));
-
   BigInt leftHalf = floorRoot2xExp2_lMinus1;
-  // cout << "hey" << endl;
-  // cout << "1: " << exp2_lMinus1 << endl;
-  // cout << "2: " << exp2_lMinus1Float << endl;
-  // cout << "3: " << floorRoot2xExp2_lMinus1 << endl;
-  // cout << "4: " << leftHalf << endl;
-  // cout << "5: " << x << endl;
+
   //(x mod (2^(l) − floor(sqrt(2)(2^(l−1)))))
   BigInt rightHalf = (x % (exp2_l - floorRoot2xExp2_lMinus1));
-  // cout << "6: " << rightHalf << endl;
 
   //Final assignment
   x = leftHalf + rightHalf;
-
-
 
   //13. If (gcd(p0*p1, p2) ≠ 1), then return failure
   if (gcd(p0 * p1, p2) != 1)
@@ -420,22 +360,13 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
     return false;
   }
 
-  // cout << "p0: " << p0 << endl;
-  // cout << endl << "p1: " << p1 << endl;
-  // cout << endl << "p0p1: " << p0p1 << endl;
-  // cout << endl << "p2: " << p2 << endl;
-  // cout << endl << "y: " << y << endl;
-
   //15. t = ceil(((2*y*p0*p1) + x)/(2*p0*p1*p2)).
-  // cout << "y: " << y << endl;
-  // cout << "x: " << x << endl;
   BigInt twoxYxP0xP1 = (2 * y * p0 * p1);
   BigInt twoxP0xP1xP2 = (2 * p0 * p1 * p2);
   leftHalf = twoxYxP0xP1 + x;
   rightHalf = twoxP0xP1xP2;
   BigInt t;
   mpz_cdiv_q(t.get_mpz_t(), leftHalf.get_mpz_t(), rightHalf.get_mpz_t());
-  // cout << "t: " << t << endl;
   //Loop to return to step 16
   while (true)
   {
@@ -486,12 +417,18 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
         outputPrime.get_mpz_t());
       if ((gcd(z - 1, outputPrime) == 1) && (expZ_p0ModP == 1))
       {
-        cout << "tests: " << endl;
+        cout << "Tests: " << endl;
         BigInt outputPrimePlus1 = outputPrime + 1;
         BigInt outputPrimeMinus1 = outputPrime - 1;
-        cout << "  " <<  mpz_divisible_p(outputPrimeMinus1.get_mpz_t(), p0.get_mpz_t()) << endl;
-        cout << "  " <<  mpz_divisible_p(outputPrimeMinus1.get_mpz_t(), p1.get_mpz_t()) << endl;
-        cout << "  " <<  mpz_divisible_p(outputPrimePlus1.get_mpz_t(), p2.get_mpz_t()) << endl;
+        cout << "  Prime - 1 divisible  by p0: " <<
+          (mpz_divisible_p(outputPrimeMinus1.get_mpz_t(), p0.get_mpz_t()) ?
+          "Passed!" : "Failed!") << endl;
+        cout << "  Prime - 1 divisible  by p1: " <<
+          (mpz_divisible_p(outputPrimeMinus1.get_mpz_t(), p1.get_mpz_t()) ?
+          "Passed!" : "Failed!") << endl;
+        cout << "  Prime + 1 divisible  by p2: " <<
+          (mpz_divisible_p(outputPrimePlus1.get_mpz_t(), p2.get_mpz_t()) ?
+          "Passed!" : "Failed!") << endl;
         return true;
       }
     }
@@ -669,7 +606,11 @@ bool RSACipher::genKeys()
   BigInt phiN = ((p - 1) * (q - 1));
 
   //Gets private key (d)
-  mpz_powm_ui(d.get_mpz_t(), e.get_mpz_t(), -1, phiN.get_mpz_t());
+  if (!mpz_invert(d.get_mpz_t(), e.get_mpz_t(), phiN.get_mpz_t()))
+  {
+    cout << "Error getting d from e and phi(n)!" << endl;
+    return false;
+  }
   //Returns success
   return true;
 }
@@ -679,19 +620,101 @@ void RSACipher::displayKeyInfo()
   const uint outputBase = 16;
   cout << "Public key (e): " << e.get_str(outputBase) << endl;
   cout << endl << "Private key (d): " << d.get_str(outputBase) << endl;
+  cout << endl << "n: " << n.get_str(outputBase) << endl;
   cout << endl << "p: " << p.get_str(outputBase) << endl;
   cout << endl << "q: " << q.get_str(outputBase) << endl << endl;
 }
 
-//TODO max input size 245b (research this)
-bool RSACipher::encrypt(string plainText)
+//TODO max input size
+bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 {
+  const int hexBase = 16;
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt plainText;
+  plainText.set_str(plainTextString, hexBase);
+
+  BigInt cipherText;
+  mpz_powm(cipherText.get_mpz_t(), plainText.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  cipherTextString = cipherText.get_str(hexBase);
+  // if ((cipherTextString.length() % 2) != 0)
+  // {
+  //   cipherTextString = "0" + cipherTextString;
+  // }
   return true;
 }
 
 //TODO RSA CRT
-bool RSACipher::decrypt(string cryptText)
+bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
 {
+  const int hexBase = 16;
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt cipherText;
+  cipherText.set_str(cipherTextString, hexBase);
+
+  BigInt plainText;
+  mpz_powm(plainText.get_mpz_t(), cipherText.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+  plainTextString = plainText.get_str(hexBase);
+  // if ((plainTextString.length() % 2) != 0)
+  // {
+  //   plainTextString = "0" + plainTextString;
+  // }
+  return true;
+}
+
+bool RSACipher::sign(string plainTextString, string& cipherTextString)
+{
+  const int hexBase = 16;
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt plainText;
+  plainText.set_str(plainTextString, hexBase);
+
+  BigInt cipherText;
+  mpz_powm(cipherText.get_mpz_t(), plainText.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+  cipherTextString = cipherText.get_str(hexBase);
+  // if ((cipherTextString.length() % 2) != 0)
+  // {
+  //   cipherTextString = "0" + cipherTextString;
+  // }
+  return true;
+}
+bool RSACipher::auth(string cipherTextString, string& plainTextString)
+{
+  const int hexBase = 16;
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt cipherText;
+  cipherText.set_str(cipherTextString, hexBase);
+
+  BigInt plainText;
+  mpz_powm(plainText.get_mpz_t(), cipherText.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  plainTextString = plainText.get_str(hexBase);
+  // if ((plainTextString.length() % 2) != 0)
+  // {
+  //   plainTextString = "0" + plainTextString;
+  // }
   return true;
 }
 

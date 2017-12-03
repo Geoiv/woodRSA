@@ -6,109 +6,170 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 #include "RSACipher.hpp"
 using namespace std;
 
+string globalCipher;
 
-const short PLAIN_INPUT = 0;
-const short DECIMAL_INPUT = 1;
-const short BINARY_INPUT = 2;
-const short HEX_INPUT = 3;
-
-string getTextFromUser()
+int inputBaseMenu()
 {
-  string outputText = "";
-  return outputText;
+  const int asciiBase = 0;
+  const int decBase = 10;
+  const int binBase = 2;
+  const int hexBase = 16;
+
+  string menuString = "Please select the format your input is in \n1. Decimal"
+    "\n2. Binary\n3. Hexadecimal\n4. ASCII";
+
+  //User input choice
+  string userChoice;
+
+  //Loops until valid input is given
+  while (true)
+  {
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+
+    //User wants to input text
+    if (userChoice == "1")
+    {
+      return decBase;
+    }
+    //User wants file input
+    else if (userChoice == "2")
+    {
+        return binBase;
+    }
+    else if (userChoice == "3")
+    {
+      return hexBase;
+    }
+    else if (userChoice == "4")
+    {
+      return asciiBase;
+    }
+    else
+    {
+      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
+    }
+  }
 }
-string getTextFromFile()
+
+
+bool getTextFromUser(string& outputString)
 {
-  string outputText = "";
-  return outputText;
+  // int inputBase = inputBaseMenu();
+  return true;
+}
+bool getTextFromFile(string& outputString)
+{
+  // int inputBase = inputBaseMenu();
+  return true;
+}
+
+bool textInputMenu(string& outputString)
+{
+
+  string menuString = "Text input or input from file? \n1. Text Input"
+    "\n2. File Input\n3. Cancel input";
+
+  //User input choice
+  string userChoice;
+
+  //Loops until valid input is given
+  while (true)
+  {
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+
+    //User wants to input text
+    if (userChoice == "1")
+    {
+      if(!getTextFromUser(outputString))
+      {
+        cout << "Reading text from user input failed!" << endl;
+        return false;
+      }
+      return true;
+    }
+    //User wants file input
+    else if (userChoice == "2")
+    {
+      if(!getTextFromFile(outputString))
+      {
+        cout << "Reading text from file failed!" << endl;
+        return false;
+      }
+      return true;
+    }
+    else if (userChoice == "3")
+    {
+      return false;
+    }
+    else
+    {
+      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
+    }
+  }
 }
 
 void encryptionMenu(RSACipher& cipher)
 {
   cout << "Encryption selected." << endl;
-  //Number of iterations
+  string plainText = "07d0";
+  string cipherText = "";
+  // if(!textInputMenu(plainText))
+  // {
+  //   cout << "Text input failed or was cancelled." << endl;
+  // }
 
-  string menuString = "Text input or input from file? \n1. Text Input"
-    "\n2. File Input\n";
-
-  //User input choice
-  string userChoice;
-
-  //Loops until valid input is given
-  bool smallLoop = true;
-  while (smallLoop)
-  {
-    cout << menuString << endl;
-    cout << "Choice: ";
-    //Gets user menu choice
-    getline(cin, userChoice);
-
-    //User wants to input text
-    if (userChoice == "1")
-    {
-      smallLoop = false;
-      string plainText = getTextFromUser();
-    }
-    //User wants file input
-    else if (userChoice == "2")
-    {
-        smallLoop = false;
-        string plainText = getTextFromFile();
-    }
-    else if (userChoice == "3")
-    {
-      smallLoop = false;
-    }
-    else
-    {
-      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
-    }
-  }
+  cipher.encrypt(plainText, cipherText);
+  globalCipher = cipherText;
+  cout << cipherText << endl;
 }
 
 void decryptionMenu(RSACipher& cipher)
 {
   cout << "Decryption selected." << endl;
-  //Number of iterations
+  string cipherText = globalCipher;
+  string plainText = "";
+  // if(!textInputMenu(cipherText))
+  // {
+  //   cout << "Text input failed!" << endl;
+  // }
 
-  string menuString = "Text input or input from file? \n1. Text Input"
-    "\n2. File Input";
+  cipher.decrypt(cipherText, plainText);
+  cout << plainText << endl;
+}
+void signingMenu(RSACipher& cipher)
+{
+  cout << "Signing selected." << endl;
+  string plainText = "07d0";
+  string cipherText = "";
+  // if(!textInputMenu(cipherText))
+  // {
+  //   cout << "Text input failed!" << endl;
+  // }
 
-  //User input choice
-  string userChoice;
+  cipher.sign(plainText, cipherText);
+  cout << cipherText << endl;
+}
+void authenticationMenu(RSACipher& cipher)
+{
+  cout << "Authentication selected." << endl;
+  string cipherText = globalCipher;
+  string plainText = "";
+  // if(!textInputMenu(cipherText))
+  // {
+  //   cout << "Text input failed!" << endl;
+  // }
 
-  //Loops until valid input is given
-  bool smallLoop = true;
-  while (smallLoop)
-  {
-    cout << menuString << endl;
-    cout << "Choice: ";
-    //Gets user menu choice
-    getline(cin, userChoice);
-
-    //User wants to input text
-    if (userChoice == "1")
-    {
-      smallLoop = false;
-      string cipherText = getTextFromUser();
-    }
-    //User wants file input
-    else if (userChoice == "2")
-    {
-      smallLoop = false;
-      string cipherText = getTextFromFile();
-    }
-    else if (userChoice == "3")
-    {
-      smallLoop = false;
-    }
-    else
-    {
-      cout << "Input must either be 1, 2, or 3. Try again. " << endl;
-    }
-  }
+  cipher.decrypt(cipherText, plainText);
+  cout << plainText << endl;
 }
 
+//TODO user input keys, clear keys
 void keyOptMenu(RSACipher& cipher)
 {
   cout << "Key Options selected." << endl;
@@ -124,7 +185,7 @@ void keyOptMenu(RSACipher& cipher)
   bool smallLoop = true;
   while (smallLoop)
   {
-    cout << menuString << endl;
+    cout << endl << menuString << endl;
     cout << "Choice: ";
     //Gets user menu choice
     getline(cin, userChoice);
@@ -132,7 +193,6 @@ void keyOptMenu(RSACipher& cipher)
     //User wants to input text
     if (userChoice == "1")
     {
-      smallLoop = false;
       cipher.genKeys();
     }
     //User wants file input
@@ -153,7 +213,7 @@ void keyOptMenu(RSACipher& cipher)
 
 int main()
 {
-  cout << "FIPS COMPLIANT RSA - GEORGE WOOD" << endl;
+  cout << "FIPS COMPLIANT RSA 2048 & SHA-224 - GEORGE WOOD" << endl;
 
   RSACipher cipher;
 
@@ -162,7 +222,8 @@ int main()
 
   //Main menu string
   string menuString = "\nPlease select your desired option: "
-    "\n1. Encryption\n2. Decryption\n3. Key Options\n4. Quit";
+    "\n1. Encryption\n2. Decryption\n3. Signing \n4. Authentication"
+    "\n5. Key Options\n6. Quit";
 
   //Repeatedly prompts user for desired function until
   //user quits or closes the program.
@@ -187,9 +248,17 @@ int main()
     }
     else if (userChoice == "3")
     {
-      keyOptMenu(cipher);
+      signingMenu(cipher);
     }
     else if (userChoice == "4")
+    {
+      authenticationMenu(cipher);
+    }
+    else if (userChoice == "5")
+    {
+      keyOptMenu(cipher);
+    }
+    else if (userChoice == "6")
     {
       keepLoop = false;
     }

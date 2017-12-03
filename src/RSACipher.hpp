@@ -30,6 +30,7 @@ class RSACipher
     const uint s1 = 112;
     const uint nLen2 = 3072;
     const uint s2 = 128;
+    const uint hexBase = 16;
     std::map<uint, uint> validPairs =
     {
       {nLen0, s0},
@@ -41,7 +42,7 @@ class RSACipher
     BigInt d = 0;
     BigInt p;
     BigInt q;
-    BigInt n;
+    BigInt n = 0;
     uint nLen;
     uint securityStrength;
 
@@ -61,8 +62,10 @@ class RSACipher
     RSACipher(uint inputNLen);
     bool genKeys();
     void displayKeyInfo();
-    bool encrypt(std::string plainText);
-    bool decrypt(std::string cryptText);
+    bool encrypt(std::string plainTextString, std::string& cipherTextString);
+    bool decrypt(std::string cipherTextString, std::string& plainTextString);
+    bool sign(std::string plainTextString, std::string& cipherTextString);
+    bool auth(std::string cipherTextString, std::string& plainTextString);
 };
 
 #endif
