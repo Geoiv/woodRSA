@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <math.h>
-#include "SHA224.hpp"
+#include "../head/SHA224.hpp"
 using namespace std;
 
 SHA224::SHA224()

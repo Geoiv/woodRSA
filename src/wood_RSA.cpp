@@ -3,17 +3,17 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 */
 
 #include <iostream>
-#include "RSACipher.hpp"
+#include "../head/RSACipher.hpp"
 using namespace std;
 
 string globalCipher;
 
-int inputBaseMenu()
+uint inputBaseMenu()
 {
-  const int asciiBase = 0;
-  const int decBase = 10;
-  const int binBase = 2;
-  const int hexBase = 16;
+  const uint asciiBase = 0;
+  const uint decBase = 10;
+  const uint binBase = 2;
+  const uint hexBase = 16;
 
   string menuString = "Please select the format your input is in \n1. Decimal"
     "\n2. Binary\n3. Hexadecimal\n4. ASCII";
@@ -57,12 +57,12 @@ int inputBaseMenu()
 
 bool getTextFromUser(string& outputString)
 {
-  // int inputBase = inputBaseMenu();
+  // uint inputBase = inputBaseMenu();
   return true;
 }
 bool getTextFromFile(string& outputString)
 {
-  // int inputBase = inputBaseMenu();
+  // uint inputBase = inputBaseMenu();
   return true;
 }
 
