@@ -11,6 +11,8 @@ RSACipher.cpp - George Wood - RSA 2048 and SHA 224
 #include "../head/SHA224.hpp"
 using namespace std;
 
+//TODO investigate gmp modulus negative return vals
+
 /*Default constructor for the RSA cipher*/
 RSACipher::RSACipher()
 {
@@ -120,7 +122,12 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
       //5. c = hashAlg(primeSeed)^hashAlg(primeSeed + 1)
       c = hashAlg(primeSeed)^hashAlg(primeSeed + 1);
       //6. c = 2^length-1 + (c mod 2^length-1)
-      c = exp2_lMinus1 + (c % exp2_lMinus1);
+      BigInt cMod = (c % exp2_lMinus1);
+      if (cMod < 0)
+      {
+        cMod += exp2_lMinus1;
+      }
+      c = exp2_lMinus1 + cMod;
       //7. c = (2 * floor(c / 2)) + 1
       BigFloat cFloat(c);
       c = ((2 * floor(cFloat / 2)) + 1);
@@ -173,7 +180,12 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   //20. primeSeed += iterations + 1
   primeSeed += iterations + 1;
   //21. x = 2^length-1 + x mod 2^(length-1)
-  x = exp2_lMinus1 + (x % exp2_lMinus1);
+  BigInt xMod = (x % exp2_lMinus1);
+  if (xMod < 0)
+  {
+    xMod += exp2_lMinus1;
+  }
+  x = exp2_lMinus1 + xMod;
 
   //22.t = ceil(x / (2 * c0))
   BigInt twoC0 = 2 * c0;
@@ -204,7 +216,12 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     //28. primeSeed += iterations + 1
     primeSeed += iterations + 1;
     //29. a = 2 + a mod (c - 3)
-    a = 2 + (a % (c - 3));
+    BigInt aMod = (a % (c - 3));
+    if (aMod < 0)
+    {
+      aMod += (c - 3);
+    }
+    a = 2 + aMod;
 
     //30. z = a^2t mod c
     BigInt z;
@@ -336,7 +353,12 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   BigInt leftHalf = floorRoot2xExp2_lMinus1;
 
   //(x mod (2^(l) − floor(sqrt(2)(2^(l−1)))))
-  BigInt rightHalf = (x % (exp2_l - floorRoot2xExp2_lMinus1));
+  BigInt xMod = (x % (exp2_l - floorRoot2xExp2_lMinus1));
+  if (xMod < 0)
+  {
+    xMod += (exp2_l - floorRoot2xExp2_lMinus1);
+  }
+  BigInt rightHalf = xMod;
 
   //Final assignment
   x = leftHalf + rightHalf;
@@ -398,7 +420,12 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
       primeSeed += iterations + 1;
       // incCount += iterations + 1;
       //19.4 a = 2 + (a mod (outputPrime–3)).
-      a = 2 + (a % (outputPrime - 3));
+      BigInt aMod = (a % (outputPrime - 3));
+      if (aMod < 0)
+      {
+        aMod += (outputPrime - 3);
+      }
+      a = 2 + aMod;
 
       //19.5 z = a^(2(t*p2 − y)*p1) mod outputPrime.
       BigInt z;
@@ -550,9 +577,19 @@ bool RSACipher::genKeys()
   BigInt exp2_256;
   mpz_ui_pow_ui(exp2_256.get_mpz_t(), 2, 256);
   e = randGen.get_z_range(exp2_256);
-  while ((e <= exp2_16) || (e >= exp2_256) || ((e % 2) != 1))
+  BigInt eMod = (e % 2);
+  if (eMod < 0)
+  {
+    eMod += 2;
+  }
+  while ((e <= exp2_16) || (e >= exp2_256) || (eMod != 1))
   {
     e = randGen.get_z_range(exp2_256);
+    eMod = (e % 2);
+    if (eMod < 0)
+    {
+      eMod += 2;
+    }
   }
 
   //Generates primes p and q for key generation
@@ -622,7 +659,15 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
   ct.set_str(cipherTextString, hexBase);
 
   BigInt dP = d % (p - 1);
+  if (dP < 0)
+  {
+    dP += (p - 1);
+  }
   BigInt dQ = d % (q - 1);
+  if (dP < 0)
+  {
+    dQ += (q - 1);
+  }
   BigInt qInv;
   if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
   {
@@ -636,13 +681,16 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
   mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
 
   BigInt h = (qInv * (m1 - m2)) % p;
+  if (h < 0)
+  {
+    h += p;
+  }
 
   BigInt pt = m2 + (h * q);
   plainTextString = pt.get_str(hexBase);
   return true;
 }
 
-//TODO negative vals?
 bool RSACipher::sign(string plainTextString, string& cipherTextString)
 {
   if (e == 0 || d == 0 || n == 0)
@@ -656,7 +704,15 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString)
   pt.set_str(plainTextString, hexBase);
 
   BigInt dP = d % (p - 1);
+  if (dP < 0)
+  {
+    dP += (p - 1);
+  }
   BigInt dQ = d % (q - 1);
+  if (dP < 0)
+  {
+    dQ += (q - 1);
+  }
   BigInt qInv;
   if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
   {
@@ -669,7 +725,18 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString)
   mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
 
   BigInt h = (qInv * (m1 - m2)) % p;
-
+  if (h < 0)
+  {
+    h += p;
+  }
+  // cout << "1: " << m1 - m2 << endl;
+  // cout << "2: " << qInv << endl;
+  // cout << "3: " << qInv * (m1 - m2) << endl;
+  // cout << "4: " << p << endl;
+  // cout << "5: " << h << endl;
+  // cout << "dp: " << dP << endl << "dq: " << dQ << endl;
+  // cout << "m1: " << m1 << endl << "m2: " << m2 << endl;
+  // cout << "h: " << h << endl;
   BigInt ct = m2 + (h * q);
   cipherTextString = ct.get_str(hexBase);
   return true;

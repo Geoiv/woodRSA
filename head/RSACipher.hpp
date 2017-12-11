@@ -16,56 +16,56 @@ RSACipher.hpp - George Wood
 
 class RSACipher
 {
-  private:
-    /*
-    As specified in NIST Special Publication 800-57 Part 1, Page 53
-    The first two vals are not approved to have probable primes generated,
-    only probable primes - as such they are not currently implemented
-    N vals are lengths in bits of the n in modulo n
-    s values are the corresponding security strengths to be used
-    */
-    const uint nLen0 = 1024;
-    const uint s0 = 80;
-    const uint nLen1 = 2048;
-    const uint s1 = 112;
-    const uint nLen2 = 3072;
-    const uint s2 = 128;
-    const uint hexBase = 16;
-    std::map<uint, uint> validPairs =
-    {
-      {nLen0, s0},
-      {nLen1, s1},
-      {nLen2, s2}
-    };
+private:
+  /*
+  As specified in NIST Special Publication 800-57 Part 1, Page 53
+  The first two vals are not approved to have probable primes generated,
+  only probable primes - as such they are not currently implemented
+  N vals are lengths in bits of the n in modulo n
+  s values are the corresponding security strengths to be used
+  */
+  const uint nLen0 = 1024;
+  const uint s0 = 80;
+  const uint nLen1 = 2048;
+  const uint s1 = 112;
+  const uint nLen2 = 3072;
+  const uint s2 = 128;
+  const uint hexBase = 16;
+  std::map<uint, uint> validPairs =
+  {
+    {nLen0, s0},
+    {nLen1, s1},
+    {nLen2, s2}
+  };
 
-    BigInt e = 0;
-    BigInt d = 0;
-    BigInt p;
-    BigInt q;
-    BigInt n = 0;
-    uint nLen;
-    uint securityStrength;
+  BigInt e = 0;
+  BigInt d = 0;
+  BigInt p;
+  BigInt q;
+  BigInt n = 0;
+  uint nLen;
+  uint securityStrength;
 
-    BigInt hashAlg(const BigInt inputX);
-    std::string genRandBits(uint stringSize);
-    std::vector<bool> sieveProcedure(uint limitVal);
-    bool primalityTest(BigInt c);
-    bool randomPrime(const uint length, const BigInt seed, BigInt& outputPrime,
-      BigInt& outputSeed, BigInt& pGenCounter);
-    bool genFirstSeed(BigInt& seed);
-    bool genPrimeFromAuxiliaries(const uint l, const uint n1, const uint n2,
-      const BigInt firstSeed, BigInt& outputPrime, BigInt& outputSeed);
-    bool genPrimes(BigInt seed);
+  BigInt hashAlg(const BigInt inputX);
+  std::string genRandBits(uint stringSize);
+  std::vector<bool> sieveProcedure(uint limitVal);
+  bool primalityTest(BigInt c);
+  bool randomPrime(const uint length, const BigInt seed, BigInt& outputPrime,
+    BigInt& outputSeed, BigInt& pGenCounter);
+  bool genFirstSeed(BigInt& seed);
+  bool genPrimeFromAuxiliaries(const uint l, const uint n1, const uint n2,
+    const BigInt firstSeed, BigInt& outputPrime, BigInt& outputSeed);
+  bool genPrimes(BigInt seed);
 
-  public:
-    RSACipher();
-    RSACipher(uint inputNLen);
-    bool genKeys();
-    void displayKeyInfo();
-    bool encrypt(std::string plainTextString, std::string& cipherTextString);
-    bool decrypt(std::string cipherTextString, std::string& plainTextString);
-    bool sign(std::string plainTextString, std::string& cipherTextString);
-    bool auth(std::string cipherTextString, std::string& plainTextString);
+public:
+  RSACipher();
+  RSACipher(uint inputNLen);
+  bool genKeys();
+  void displayKeyInfo();
+  bool encrypt(std::string plainTextString, std::string& cipherTextString);
+  bool decrypt(std::string cipherTextString, std::string& plainTextString);
+  bool sign(std::string plainTextString, std::string& cipherTextString);
+  bool auth(std::string cipherTextString, std::string& plainTextString);
 };
 
 #endif

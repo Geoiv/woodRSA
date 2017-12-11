@@ -153,6 +153,7 @@ void signingMenu(RSACipher& cipher)
   // }
 
   cipher.sign(plainText, cipherText);
+  globalCipher = cipherText;
   cout << cipherText << endl;
 }
 void authenticationMenu(RSACipher& cipher)
@@ -165,7 +166,7 @@ void authenticationMenu(RSACipher& cipher)
   //   cout << "Text input failed!" << endl;
   // }
 
-  cipher.decrypt(cipherText, plainText);
+  cipher.auth(cipherText, plainText);
   cout << plainText << endl;
 }
 
