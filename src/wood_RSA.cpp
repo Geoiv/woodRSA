@@ -3,7 +3,7 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 */
 
 #include <iostream>
-#include "../head/RSACipher.hpp"
+#include "./head/RSACipher.hpp"
 using namespace std;
 
 string globalCipher;
@@ -269,3 +269,5 @@ int main()
     }
   }
 }
+
+//TODO look at assurances 5.3

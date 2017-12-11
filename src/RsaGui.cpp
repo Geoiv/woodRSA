@@ -1,4 +1,4 @@
-#include "../head/RsaGUi.h"
+#include "./head/RsaGUi.h"
 
 bool MyApp::OnInit()
 {

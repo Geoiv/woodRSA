@@ -7,17 +7,18 @@ RSACipher.cpp - George Wood - RSA 2048 and SHA 224
 #include <math.h>
 #include <climits>
 #include <iostream>
-#include "../head/RSACipher.hpp"
-#include "../head/SHA224.hpp"
+#include "./head/RSACipher.hpp"
+#include "./head/SHAHash.hpp"
 using namespace std;
 
 //TODO investigate gmp modulus negative return vals
 
-/*Default constructor for the RSA cipher*/
+/*Default constructor for the RSA cipher - defaults to RSA-2048*/
 RSACipher::RSACipher()
 {
   nLen = nLen1;
-  securityStrength = validPairs.at(nLen1);
+  securityStrength = secStrengthPairs.at(nLen);
+  shaType = shaBlockPairs.at(nLen);
 }
 
 /*Constructor for specified nLen*/
@@ -26,7 +27,8 @@ RSACipher::RSACipher(uint inputNLen)
   if (inputNLen == nLen0 || inputNLen == nLen1 || inputNLen == nLen2)
   {
     nLen = inputNLen;
-    securityStrength = validPairs.at(inputNLen);
+    securityStrength = secStrengthPairs.at(inputNLen);
+    shaType = shaBlockPairs.at(inputNLen);
   }
   else
   {
@@ -37,7 +39,7 @@ RSACipher::RSACipher(uint inputNLen)
 BigInt RSACipher::hashAlg(const BigInt inputX)
 {
 
-  SHA224 sha;
+  SHAHash sha(shaType);
   string inputHex = inputX.get_str(hexBase);
   //Length of string returned  by above function is strlen + 1
   string hashedHex = sha.hash(inputHex);
@@ -163,7 +165,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     return false;
   }
   //16. iterations = ceil(length / outlen) - 1;
-  uint outLen = SHA224::outputBlockSize;
+  uint outLen = SHAHash::outputBlockSize;
   uint iterations = ceil((float)length / outLen) - 1;
   //17. oldCounter = pGenCounter
   BigInt oldCounter = pGenCounter;
@@ -328,7 +330,7 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
   //7. iterations = ceil(l / outLen) − 1, where outLen is the length of the
   //hash function output block
-  uint outLen = SHA224::outputBlockSize;
+  uint outLen = SHAHash::outputBlockSize;
   uint iterations = ceil((float)l / outLen) - 1;
   //8. pGenCounter = 0
   BigInt pGenCounter = 0;
@@ -625,8 +627,6 @@ void RSACipher::displayKeyInfo()
   cout << endl << "q: " << q.get_str(outputBase) << endl << endl;
 }
 
-//TODO max input size
-//TODO input size greater than n
 //TODO PSKCS stuff
 bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 {
@@ -639,6 +639,11 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
+
+  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt ct;
   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
@@ -702,6 +707,11 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString)
 
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
+
+  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt dP = d % (p - 1);
   if (dP < 0)

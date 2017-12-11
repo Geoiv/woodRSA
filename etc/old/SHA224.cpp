@@ -2,10 +2,9 @@
 #include <iostream>
 #include <sstream>
 #include <math.h>
-#include "../head/SHA224.hpp"
+#include "SHA224.hpp"
 using namespace std;
 
-//TODO make this several different forms of SHA
 SHA224::SHA224()
 {
 
