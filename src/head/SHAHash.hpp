@@ -25,6 +25,8 @@ private:
   uint h5;
   uint h6;
   uint h7;
+  uint usedWorkingVarCount;
+  uint outputBlockSize;
 
   const std::vector<uint> K = {
                             0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
@@ -54,12 +56,11 @@ private:
   uint majFunc(uint x, uint y, uint z);
 public:
 
-  static const uint blockSize = 512;
-  static const uint outputBlockSize = 224;
   static const uint bitsInWord = 32;
   static const uint wordsInBlock = 16;
   const uint hexCharsInWord = 8;
   SHAHash(uint reqBlockSize);
+  uint getBlockSize();
   std::string hash(std::string inputHex);
 };
 

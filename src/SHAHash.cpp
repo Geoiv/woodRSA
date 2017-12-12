@@ -17,6 +17,9 @@ SHAHash::SHAHash(uint reqBlockSize)
     h5 = 0x68581511;
     h6 = 0x64f98fa7;
     h7 = 0xbefa4fa4;
+
+    outputBlockSize = 224;
+    usedWorkingVarCount = 7;
   }
   else if (reqBlockSize == blockChoice256)
   {
@@ -28,6 +31,9 @@ SHAHash::SHAHash(uint reqBlockSize)
     h5 = 0x9b05688c;
     h6 = 0x1f83d9ab;
     h7 = 0x5be0cd19;
+
+    outputBlockSize = 256;
+    usedWorkingVarCount = 8;
   }
 
   else
@@ -45,7 +51,7 @@ vector<uint> SHAHash::padParseInput(string& inputHex)
   const uint finalPaddingBits = 64;
   const uint finalPaddingChars = finalPaddingBits / bitsInHexChar;
   const uint padFinder0 = 448 / bitsInHexChar;
-  const uint hexBlockSize = blockSize / bitsInHexChar;
+  const uint hexBlockSize = outputBlockSize / bitsInHexChar;
 
   uint l = inputHex.length();
   string first1 = "80";
@@ -140,13 +146,17 @@ uint SHAHash::majFunc(uint x, uint y, uint z)
   return (x & y)^(x & z)^(y & z);
 }
 
+uint SHAHash::getBlockSize()
+{
+  return outputBlockSize;
+}
+
 string SHAHash::hash(string inputHex)
 {
   const uint hexCharsInWord = 8;
   const uint messageSchedFirst = 16;
   const uint messageSchedSecond = 64;
   const uint roundCount = 64;
-  const uint workingVarCount = 8;
   const uint twoExp32 = pow(2, 32);
 
   uint hashVals[] = {h0, h1, h2, h3, h4, h5, h6, h7};
@@ -216,7 +226,7 @@ string SHAHash::hash(string inputHex)
 
   string hashHex = "";
 
-  for (uint i = 0; i < workingVarCount - 1; i++)
+  for (uint i = 0; i < usedWorkingVarCount; i++)
   {
     stringstream hexStream;
     hexStream << hex << hashVals[i];

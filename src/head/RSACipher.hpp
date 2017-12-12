@@ -46,6 +46,12 @@ private:
 
   const uint binBase = 2;
   const uint hexBase = 16;
+
+  const std::string sha224LHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4"
+                                  "649b934ca495991b";
+  const std::string sha256LHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4"
+                                  "649b934ca495991b7852b855";
+
   std::map<uint, uint> secStrengthPairs =
   {
     {nLen0, s0},
@@ -66,7 +72,7 @@ private:
   BigInt n = 0;
   uint nLen;
   uint securityStrength;
-  uint shaType;
+  uint shaOutLen;
 
   BigInt hashAlg(const BigInt inputX);
   std::string genRandBits(uint stringSize);
@@ -84,6 +90,7 @@ public:
   RSACipher(uint inputNLen);
   bool genKeys();
   void displayKeyInfo();
+  bool maskGenFunc(BigInt seed, uint maskLen, BigInt& mask);
   bool encrypt(std::string plainTextString, std::string& cipherTextString);
   bool decrypt(std::string cipherTextString, std::string& plainTextString);
   bool sign(std::string plainTextString, std::string& cipherTextString);

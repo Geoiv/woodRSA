@@ -18,7 +18,7 @@ RSACipher::RSACipher()
 {
   nLen = nLen1;
   securityStrength = secStrengthPairs.at(nLen);
-  shaType = shaBlockPairs.at(nLen);
+  shaOutLen = shaBlockPairs.at(nLen);
 }
 
 /*Constructor for specified nLen*/
@@ -28,7 +28,7 @@ RSACipher::RSACipher(uint inputNLen)
   {
     nLen = inputNLen;
     securityStrength = secStrengthPairs.at(inputNLen);
-    shaType = shaBlockPairs.at(inputNLen);
+    shaOutLen = shaBlockPairs.at(inputNLen);
   }
   else
   {
@@ -39,7 +39,7 @@ RSACipher::RSACipher(uint inputNLen)
 BigInt RSACipher::hashAlg(const BigInt inputX)
 {
 
-  SHAHash sha(shaType);
+  SHAHash sha(shaOutLen);
   string inputHex = inputX.get_str(hexBase);
   //Length of string returned  by above function is strlen + 1
   string hashedHex = sha.hash(inputHex);
@@ -165,8 +165,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     return false;
   }
   //16. iterations = ceil(length / outlen) - 1;
-  uint outLen = SHAHash::outputBlockSize;
-  uint iterations = ceil((float)length / outLen) - 1;
+  uint iterations = ceil((float)length / shaOutLen) - 1;
   //17. oldCounter = pGenCounter
   BigInt oldCounter = pGenCounter;
   //18. x = 0
@@ -176,7 +175,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   for (uint i = 0; i <= iterations; i++)
   {
     BigInt exp2_ixOutLen;
-    mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * outLen);
+    mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * shaOutLen);
     x += hashAlg(primeSeed + i) * exp2_ixOutLen;
   }
   //20. primeSeed += iterations + 1
@@ -212,7 +211,7 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
     for (uint i = 0; i <= iterations; i++)
     {
       BigInt exp2_ixOutLen;
-      mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * outLen);
+      mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * shaOutLen);
       a += hashAlg(primeSeed + i) * exp2_ixOutLen;
     }
     //28. primeSeed += iterations + 1
@@ -330,8 +329,7 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   }
   //7. iterations = ceil(l / outLen) − 1, where outLen is the length of the
   //hash function output block
-  uint outLen = SHAHash::outputBlockSize;
-  uint iterations = ceil((float)l / outLen) - 1;
+  uint iterations = ceil((float)l / shaOutLen) - 1;
   //8. pGenCounter = 0
   BigInt pGenCounter = 0;
   //9. x = 0
@@ -340,7 +338,7 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   for (uint i = 0; i <= iterations; i++)
   {
     BigInt exp2_ixOutLen;
-    mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * outLen);
+    mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * shaOutLen);
     x += (hashAlg(primeSeed + i) * exp2_ixOutLen);
   }
   //11. primeSeed = primeSeed + iterations + 1.
@@ -415,7 +413,7 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
       for (uint i = 0; i <= iterations; i++)
       {
         BigInt exp2_ixOutLen;
-        mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * outLen);
+        mpz_ui_pow_ui(exp2_ixOutLen.get_mpz_t(), 2, i * shaOutLen);
         a += hashAlg(primeSeed + i) * exp2_ixOutLen;
       }
       //19.3 primeSeed = primeSeed + iterations + 1.
@@ -627,7 +625,34 @@ void RSACipher::displayKeyInfo()
   cout << endl << "q: " << q.get_str(outputBase) << endl << endl;
 }
 
-//TODO PSKCS stuff
+bool RSACipher::maskGenFunc(BigInt seed, uint maskLen, BigInt& mask)
+{
+  if (maskLen > (pow(2, 32) * shaOutLen))
+  {
+    cout << "Requested mask length too long." << endl;
+  }
+  string t = "";
+  const uint cLen = 4 * 8;
+  for (uint counter = 0; counter <= (ceil(maskLen / shaOutLen) - 1); counter++)
+  {
+    BigInt temp = counter;
+    string c = temp.get_str(binBase);
+    for (uint i = 0; i < cLen - c.size(); i++)
+    {
+      c = "0" + c;
+    }
+    temp.set_str(temp.get_str(binBase) + c, binBase);
+    t += hashAlg(temp).get_str(binBase);
+  }
+  BigInt tInt;
+  tInt.set_str(t, binBase);
+  return true;
+}
+
+/*RSAES-OAEP as specified in PKCS #1 version 2.2
+  Labels are not utilized, as they are not needed in this context.
+  TODO finish pkcs 2.2
+*/
 bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 {
   if (e == 0 || d == 0 || n == 0)
@@ -640,19 +665,70 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
-  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+
+  uint mLen = mpz_sizeinbase(pt.get_mpz_t(), binBase);
+  const uint additPadbits = (2 * 8);
+  if (mLen > (nLen - (2 * shaOutLen) - additPadbits))
   {
     cout << "Input too large!" << endl;
   }
 
+  string lHash;
+  if (shaOutLen == sha0 || shaOutLen == sha1)
+  {
+    lHash = sha224LHash;
+  }
+  else if (shaOutLen == sha2)
+  {
+    lHash = sha256LHash;
+  }
+
+  gmp_randclass randGen(gmp_randinit_mt);
+  randGen.seed(clock());
+  string paddingString((nLen - mLen - (2 * shaOutLen) - additPadbits), '0');
+
+  const string hexZero = "00";
+  const string hexOne = "01";
+
+  string concatString = lHash + paddingString + hexOne + plainTextString;
+  BigInt dataBlock;
+  dataBlock.set_str(concatString, hexBase);
+
+  BigInt seed = randGen.get_z_bits(shaOutLen);
+
+  BigInt dbMask;
+  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
+  {
+    cout << "Data block mask generation failed." << endl;
+    return false;
+  }
+  BigInt maskedDB = dataBlock^dbMask;
+  BigInt seedMask;
+  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
+  {
+    cout << "Seed mask generation failed." << endl;
+    return false;
+  }
+  BigInt maskedSeed = seed^seedMask;
+  string emString = hexZero + maskedSeed.get_str(hexBase) + maskedDB.get_str(hexBase);
+  BigInt em;
+  em.set_str(emString, hexBase);
   BigInt ct;
+  // mpz_powm(ct.get_mpz_t(), em.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   cipherTextString = ct.get_str(hexBase);
+  if (cipherTextString.size() % 2 != 0)
+  {
+    cipherTextString = "0" + cipherTextString;
+  }
   return true;
 }
 
 bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
 {
+  const string hexZero = "00";
+  const string hexOne = "01";
+
   if (e == 0 || d == 0 || n == 0)
   {
     cout << "Key data not available! Please visit the key option menu to "
@@ -662,6 +738,91 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
 
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
+  /*
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) != nLen)
+  {
+    cout << mpz_sizeinbase(ct.get_mpz_t(), binBase) << endl;
+    cout << "Ciphertext is not of proper nLen." << endl;
+    return false;
+  }
+  if (nLen < ((2 * shaOutLen) + 2))
+  {
+    cout << "nLen too small." << endl;
+    return false;
+  }
+
+  string lHash;
+  if (shaOutLen == sha0 || shaOutLen == sha1)
+  {
+    lHash = sha224LHash;
+  }
+  else if (shaOutLen == sha2)
+  {
+    lHash = sha256LHash;
+  }
+
+  const uint hexCharsInOctet = 2;
+
+  if (cipherTextString.substr(0, hexCharsInOctet).compare(hexZero) != 0)
+  {
+    cout << "Y is nonZero!" << endl;
+    return false;
+  }
+
+  BigInt maskedSeed;
+  maskedSeed.set_str(cipherTextString.substr(hexCharsInOctet, shaOutLen),
+                                             hexBase);
+  BigInt maskedDB;
+  maskedDB.set_str(cipherTextString.substr(hexCharsInOctet + shaOutLen,
+                                           (nLen - shaOutLen - 1)), hexBase);
+  BigInt seedMask;
+  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
+  {
+    cout << "Seed mask generation failed." << endl;
+    return false;
+  }
+  BigInt seed = maskedSeed^seedMask;
+  BigInt dbMask;
+  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
+  {
+    cout << "Data block mask generation failed." << endl;
+    return false;
+  }
+
+
+
+  BigInt dataBlock = maskedDB^dbMask;
+  string dbString = dataBlock.get_str(hexBase);
+
+  string lHashPrime = dbString.substr(0, shaOutLen);
+  if (shaOutLen == sha0 || shaOutLen == sha1)
+  {
+    if (lHashPrime.compare(sha224LHash) != 0)
+    {
+      cout << "lHash' does not equal lHash!" << endl;
+      return false;
+    }
+  }
+  else if (shaOutLen == sha2)
+  {
+    if (lHashPrime.compare(sha256LHash) != 0)
+    {
+      cout << "lHash' does not equal lHash!" << endl;
+      return false;
+    }
+  }
+
+  uint oneIndex = dbString.find(hexOne, shaOutLen);
+  if (oneIndex == dbString.size())
+  {
+    cout << "Padding '01' not found!" << endl;
+    return false;
+  }
+
+  string m = dbString.substr(oneIndex + hexCharsInOctet);
+  BigInt mInt;
+  mInt.set_str(m, hexBase);
+  */
 
   BigInt dP = d % (p - 1);
   if (dP < 0)
@@ -682,6 +843,8 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
   BigInt m1;
   BigInt m2;
 
+  // mpz_powm(m1.get_mpz_t(), mInt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+  // mpz_powm(m2.get_mpz_t(), mInt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
   mpz_powm(m1.get_mpz_t(), ct.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
   mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
 
@@ -693,6 +856,10 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
 
   BigInt pt = m2 + (h * q);
   plainTextString = pt.get_str(hexBase);
+  if (plainTextString.size() % 2 != 0)
+  {
+    plainTextString = "0" + plainTextString;
+  }
   return true;
 }
 
@@ -739,16 +906,12 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString)
   {
     h += p;
   }
-  // cout << "1: " << m1 - m2 << endl;
-  // cout << "2: " << qInv << endl;
-  // cout << "3: " << qInv * (m1 - m2) << endl;
-  // cout << "4: " << p << endl;
-  // cout << "5: " << h << endl;
-  // cout << "dp: " << dP << endl << "dq: " << dQ << endl;
-  // cout << "m1: " << m1 << endl << "m2: " << m2 << endl;
-  // cout << "h: " << h << endl;
   BigInt ct = m2 + (h * q);
   cipherTextString = ct.get_str(hexBase);
+  if (cipherTextString.size() % 2 != 0)
+  {
+    cipherTextString = "0" + cipherTextString;
+  }
   return true;
 }
 bool RSACipher::auth(string cipherTextString, string& plainTextString)
@@ -766,6 +929,10 @@ bool RSACipher::auth(string cipherTextString, string& plainTextString)
   BigInt pt;
   mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   plainTextString = pt.get_str(hexBase);
+  if (plainTextString.size() % 2 != 0)
+  {
+    plainTextString = "0" + plainTextString;
+  }
   return true;
 }
 
