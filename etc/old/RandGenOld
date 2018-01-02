@@ -1,0 +1,258 @@
+/*
+RandGen.cpp - George Wood
+*/
+
+#include <iostream>
+#include <math.h>
+#include <sstream>
+#include "./head/RandGen.hpp"
+#include "./head/SHAHash.hpp"
+#include <gmpxx.h>
+
+  typedef mpz_class BigInt;
+using namespace std;
+
+//TODO discover what state handle means exactly
+bool RandGen::getEntropyInput(uint& entropyInput, uint entropySize)
+{
+  for (uint i = 0; i < entropySize; i++)
+  {
+
+  }
+  return true;
+}
+
+bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
+{
+
+  SHAHash sha(shaType);
+  string temp = "";
+  uint len = ceil(bitsToReturn / shaType);
+  uint counter = 1;
+  for (uint i = 1; i <= len; i++)
+  {
+    stringstream hexStream;
+    hexStream << hex << counter;
+    hexStream << hex << bitsToReturn;
+    temp += sha.hash(hexStream.str() + inputHex);
+    counter++;
+  }
+  //TODO make sure this division works as integer division
+  outputHex = temp.substr(0, bitsToReturn / bitsInHexChar);
+  return true;
+}
+
+bool RandGen::findStateSpace(uint& stateHandle)
+{
+  stateSpacesUsed++;
+  stateHandle = stateSpacesUsed;
+  return true;
+}
+
+bool RandGen::reseed(uint inputPredResFlag, string additInput)
+{
+  const uint maxAdditInputLen = 512;
+  const uint entropySize = 1000;
+  //1. I dunno lol
+  //2. Get appropriate internal state vals, handled with instance vars
+  //3. If length of additional input is > 512, return failure.
+  if (additInput.size() > maxAdditInputLen)
+  {
+    cout << "Additional input too large." << endl;
+    return false;
+  }
+  //4. entropyInput = getEntropyInput()
+  //5. If it fails, return failure
+  uint entropyInput;
+  if (!getEntropyInput(entropyInput, entropySize))
+  {
+    cout << "Getting entropy input failed." << endl;
+    return false;
+  }
+  //6. seedMaterial = 0x01 + V + enyropyInput + additInput
+  stringstream hexStream;
+  hexStream << hex << entropyInput;
+  string seedMaterial = "01" + V + hexStream.str() + additInput;
+
+  //7. seed = hashDf(seedMaterial, 440)
+  //8. V = seed
+  if (!hashDf(seedMaterial, 440, V))
+  {
+    cout << "HashDF Failed!" << endl;
+    return false;
+  }
+
+  //9. C = hashDf((0x00 + V), 440)
+  if (!hashDf(("00" + V), 440, C))
+  {
+    cout << "HashDF Failed!" << endl;
+    return false;
+  }
+  //10. reseedCounter = 1
+  reseedCounter = 1;
+  //11. Update state values, already handled with instance v ars
+  //12. Return success
+  return true;
+}
+
+RandGen::RandGen(uint shaOutLen)
+{
+  if (shaOutLen == sha224OutLen)
+  {
+    shaType = shaOutLen;
+  }
+  else if (shaOutLen == sha256OutLen)
+  {
+    shaType = shaOutLen;
+  }
+  else
+  {
+    shaType = sha256OutLen;
+    cout << "Invalid SHA output length. Set to 256." << endl;
+  }
+}
+
+bool RandGen::instantiate(uint reqSecurityStr, string persStr)
+{
+  //TODO check what determines this size
+  const uint maxPersStrSize = 512;
+  //1. If requested security strength is invalid, return failure
+  //(Also handles step 3)
+  if (reqSecurityStr > shaType)
+  {
+    cout << "Security strngth cannot be higher than that of the SHA algorithm."
+      << endl;
+    return false;
+  }
+  if ((reqSecurityStr != secStrength0) && (reqSecurityStr != secStrength1) &&
+      (reqSecurityStr != secStrength2) && (reqSecurityStr != secStrength3))
+  {
+    cout << "Invalid security strength requested." << endl;
+    return false;
+  }
+
+  //2. If personalization string length is greater than 512, return failure.
+  if (persStr.size() > maxPersStrSize)
+  {
+    cout << "Personalization string too long." << endl;
+    return false;
+  }
+  //3. Handled in step 1. (Security strength too low)
+
+  //4. entropyInput = getEntropyInput()
+  //5. If it fails, return failure
+  uint entropyInput;
+  if (!getEntropyInput(entropyInput))
+  {
+    cout << "Getting entropy input failed." << endl;
+    return false;
+  }
+
+  //6. instantiationNonce++
+  instantiationNonce++;
+
+  //7. seedMaterial = entropyInput + instantiationNonce + persStr
+  stringstream hexStream;
+  hexStream << hex << entropyInput;
+  hexStream << hex << instantiationNonce;
+  string seedMaterial = hexStream.str() + persStr;
+
+  //8. seed = hashDf(seedMaterial, 440)
+  //9. V = seed
+  if (!hashDf(seedMaterial, 440, V))
+  {
+    cout << "HashDF Failed!" << endl;
+    return false;
+  }
+
+  //10. C = hashDf((0x00 + V), 440)
+  if (!hashDf(("00" + V), 440, C))
+  {
+    cout << "HashDF Failed!" << endl;
+    return false;
+  }
+  //11. reseedCounter = 1;
+  reseedCounter = 1;
+  //12. stateHandle = findStateSpace()
+  //13. If it fails, return false
+  if (!findStateSpace(stateHandle))
+  {
+    cout << "Finding state space failed." << endl;
+    return false;
+  }
+  //14. Save internal state (already done)
+  return true;
+}
+
+
+
+bool RandGen::rand(uint requestedBitCount, string additInput)
+{
+  const uint maxReqBits = 5000;
+  const uint maxAdditInputLen = 512;
+  const uint maxReseedCounterVal = 100000;
+  SHAHash sha(shaType);
+  //1. I dunno lol
+  //2. Get internal state vars, already handled with instance vars
+  //3. If requestedBitCount > 5000, return failure
+  if (requestedBitCount > maxReqBits)
+  {
+    cout << "Too many bits requested." << endl;
+    return false;
+  }
+  //4. If requestedSecurityStrength > securityStrength, return FAILURE
+  //TODO is this necessary since it was handled in the instantiation?
+
+  //5. If length of additInput > 512, return failure
+  if (additInput.size() > maxAdditInputLen)
+  {
+    cout << "Additional input too large." << endl;
+    return false;
+  }
+  //6. If reseedCounter > 100,000, reseed and nullify the additional input
+  if (reseedCounter > maxReseedCounterVal)
+  {
+    //TODO 1 magic val
+    if (!reseed(1, additInput))
+    {
+      cout << "Reseeding failed." << endl;
+      return false;
+    }
+    additInput = "";
+  }
+  string w;
+  //7. If additInput != null, then do
+  //TODO finish this, bigInts for hash outputs
+  if (additInput.size() != 0)
+  {
+    w = sha.hash("02" + V + additInput);
+    //V = stoi(V + w) % (2^440);
+  }
+
+  //8. m = requestedBitCount / outlen
+  uint m = requestedBitCount / shaType;
+  //9. data = V
+  string data = V;
+  //10. W = null string
+  string W = "";
+  //11. For i = 1 to m
+  for (uint i = 1; i <= m; i++)
+  {
+    w = sha.hash(data);
+    W = W + w;
+    //TODO finish this
+    //data = (data + 1) % (2^440);
+  }
+  //12.
+  string pseudoRandBits = W.substr(0, (requestedBitCount / bitsInHexChar));
+  //13.
+  string H = sha.hash("03" + V);
+  //14.
+  //TODO more 2^440
+  //V = (V + H + C + reseedCounter) % (2^440)
+  //15. reseedCounter++
+  reseedCounter++;
+  //16. Update internal state vals, handled by instance vars
+  //17. Return success
+  return true;
+}

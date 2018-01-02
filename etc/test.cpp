@@ -1,4 +1,4 @@
-//#include <gmpxx.h>
+#include <gmpxx.h>
 #include <bitset>
 #include <iostream>
 #include <sstream>
@@ -7,16 +7,18 @@
 //#include "SHA224.cpp"
 using namespace std;
 
-  //typedef mpz_class BigInt;
-  //typedef mpf_class BigFloat;
+  typedef mpz_class BigInt;
+  typedef mpf_class BigFloat;
   typedef unsigned int uint;
 
 int main()
 {
-  // int x = (int) 'h';
-  //SHA224 sha;
-  // stringstream stream;
-  // stream << hex << x;
-  cout << sizeof(uint) << endl;
+  BigInt x = 5;
+  BigInt y = 10;
+  BigInt z = 12;
+
+  cout << y % x << endl;
+  cout << -y % x << endl;
+  cout << (-y * x) % z << endl;
 
 }

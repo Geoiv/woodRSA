@@ -11,8 +11,6 @@ RSACipher.cpp - George Wood - RSA 2048 and SHA 224
 #include "./head/SHAHash.hpp"
 using namespace std;
 
-//TODO investigate gmp modulus negative return vals
-
 /*Default constructor for the RSA cipher - defaults to RSA-2048*/
 RSACipher::RSACipher()
 {
@@ -577,18 +575,16 @@ bool RSACipher::genKeys()
   BigInt exp2_256;
   mpz_ui_pow_ui(exp2_256.get_mpz_t(), 2, 256);
   e = randGen.get_z_range(exp2_256);
-  BigInt eMod = (e % 2);
-  if (eMod < 0)
+  if ((e % 2) < 0)
   {
-    eMod += 2;
+    e += 2;
   }
-  while ((e <= exp2_16) || (e >= exp2_256) || (eMod != 1))
+  while ((e <= exp2_16) || (e >= exp2_256) || ((e % 2) != 1))
   {
     e = randGen.get_z_range(exp2_256);
-    eMod = (e % 2);
-    if (eMod < 0)
+    if ((e % 2) < 0)
     {
-      eMod += 2;
+      e += 2;
     }
   }
 
@@ -935,5 +931,3 @@ bool RSACipher::auth(string cipherTextString, string& plainTextString)
   }
   return true;
 }
-
-
