@@ -8,17 +8,17 @@ RandGen.cpp - George Wood
 #include <sstream>
 #include "./head/RandGen.hpp"
 #include "./head/SHAHash.hpp"
-#include <gmpxx.h>
-
-  typedef mpz_class BigInt;
+#include "./head/RSABigTypes.hpp"
 using namespace std;
 
-//TODO discover what state handle means exactly
+/*Gets the base-2 entropy used to instantiate the generator. An unapproved RNG
+  is used for this, which is permitted as stated in FIPS 140-2*/
 bool RandGen::getEntropyInput(string& entropyInput, uint entropySize)
 {
   srand(time(NULL));
   string outputEntropy = "";
   uint temp;
+  //Pseudo-randomly selects a 0 or a 1 and appends it to the output string.
   for (uint i = 0; i < entropySize; i++)
   {
     temp = (rand() % 2);
@@ -30,6 +30,7 @@ bool RandGen::getEntropyInput(string& entropyInput, uint entropySize)
   return true;
 }
 
+/*HashDF function, as specified in FIPS SP 800-90A*/
 bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
 {
 
@@ -45,11 +46,11 @@ bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
     temp += sha.hash(hexStream.str() + inputHex);
     counter++;
   }
-  //TODO make sure this division works as integer division
   outputHex = temp.substr(0, bitsToReturn / bitsInHexChar);
   return true;
 }
 
+/*Constructor with parameter for the SHA output block size to be used*/
 RandGen::RandGen(uint shaOutLen)
 {
   if (shaOutLen == sha224OutLen)
@@ -65,9 +66,12 @@ RandGen::RandGen(uint shaOutLen)
     shaType = sha256OutLen;
     cout << "Invalid SHA output length. Set to 256." << endl;
   }
+  instantiationNonce = time(NULL);
 }
 
-bool RandGen::instantiate(uint reqSecurityStr, string persStr)
+/*Instantiates the RBG with the requested security strength as stated in
+  FIPS SP 800-90A*/
+bool RandGen::instantiate(uint reqSecurityStr)
 {
   //1. If requested security strength is invalid, return failure
   //(Also handles step 3)
@@ -77,6 +81,7 @@ bool RandGen::instantiate(uint reqSecurityStr, string persStr)
       << endl;
     return false;
   }
+  //Invalid security strength requested
   if ((reqSecurityStr != secStrength0) && (reqSecurityStr != secStrength1) &&
       (reqSecurityStr != secStrength2) && (reqSecurityStr != secStrength3))
   {
@@ -85,12 +90,8 @@ bool RandGen::instantiate(uint reqSecurityStr, string persStr)
   }
 
   //2. If personalization string length is greater than 512, return failure.
-  if (persStr.size() > maxPersStrSize)
-  {
-    cout << "Personalization string too long." << endl;
-    return false;
-  }
-  //3. Handled in step 1. (Security strength too low)
+  // No personalization string utilized
+  //3. If security strength too low, return failure(Security strength too low)
 
   //4. entropyInput = getEntropyInput()
   //5. If it fails, return failure
@@ -102,14 +103,14 @@ bool RandGen::instantiate(uint reqSecurityStr, string persStr)
   }
 
   //6. instantiationNonce++
-  //TODO is this needed? Is personalization string needed? Pers String base?
   instantiationNonce++;
 
   //7. seedMaterial = entropyInput + instantiationNonce + persStr
+  //  No personalization string utilized
   stringstream hexStream;
   hexStream << hex << entropyInput;
   hexStream << hex << instantiationNonce;
-  string seedMaterial = hexStream.str() + persStr;
+  string seedMaterial = hexStream.str();
 
   //8. seed = hashDf(seedMaterial, 440)
   //9. V = seed
@@ -132,13 +133,13 @@ bool RandGen::instantiate(uint reqSecurityStr, string persStr)
   return true;
 }
 
-
-
-bool RandGen::genRandom(uint requestedBitCount, string additInput,
-                        string& pseudoRandBits)
+/*Generates a random number of a specified number of bits, as stated in
+  FIPS SP 800-90A*/
+bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandBits)
 {
-  //TODO what is addit input
   BigInt twoExp440;
+  BigInt temp;
+  BigInt temp2;
   mpz_ui_pow_ui(twoExp440.get_mpz_t(), 2, 440);
   SHAHash sha(shaType);
   //1. I dunno lol
@@ -150,24 +151,15 @@ bool RandGen::genRandom(uint requestedBitCount, string additInput,
     return false;
   }
   //4. If requestedSecurityStrength > securityStrength, return FAILURE
-  //TODO is this necessary since it was handled in the instantiation?
+  //  Handled in instantiation
 
   //5. If length of additInput > 512, return failure
-  if (additInput.size() > maxAdditInputLen)
-  {
-    cout << "Additional input too large." << endl;
-    return false;
-  }
+  //  Additional input not utilized
   //6. If reseedCounter > 100,000, reseed and nullify the additional input
   //   (Reseeding not needed)
   string w;
   //7. If additInput != null, then do
-  //TODO finish this, bigInts for hash outputs
-  if (additInput.size() != 0)
-  {
-    w = sha.hash("02" + V + additInput);
-    //V = stoi(V + w) % (2^440);
-  }
+  //  Additional input not utilized
 
   //8. m = ceil(requestedBitCount / outlen)
   uint m = ceil(requestedBitCount / shaType);
@@ -176,7 +168,6 @@ bool RandGen::genRandom(uint requestedBitCount, string additInput,
   //10. W = null string
   string W = "";
   //11. For i = 1 to m
-  BigInt temp;
   for (uint i = 1; i <= m; i++)
   {
     w = sha.hash(data);
@@ -193,7 +184,6 @@ bool RandGen::genRandom(uint requestedBitCount, string additInput,
   //13.
   string H = sha.hash("03" + V);
   //14. V = (V + H + C + reseedCounter) % (2^440)
-  BigInt temp2;
   temp.set_str(V, hexBase);
   temp2.set_str(H, hexBase);
   temp += temp2;

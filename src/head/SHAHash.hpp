@@ -2,21 +2,19 @@
 SHA256.hpp - George Wood
 */
 
-#ifndef __WOODSHA_H__
-#define __WOODSHA_H__
-
+#ifndef __SHAHASH_HPP__
+#define __SHAHASH_HPP__
 
 #include <vector>
 #include <string>
-
-  typedef unsigned int uint;
+#include "RSAConsts.hpp"
 
 class SHAHash
 {
 private:
-  const uint blockChoice224 = 224;
-  const uint blockChoice256 = 256;
 
+
+  //Hash values used in hashing algorithm (Values depend on SHA type)
   uint h0;
   uint h1;
   uint h2;
@@ -25,9 +23,12 @@ private:
   uint h5;
   uint h6;
   uint h7;
+  //Number of working variables used in output hash value (depends on SHA type)
   uint usedWorkingVarCount;
+  //Size of the output block (Depends on SHA type)
   uint outputBlockSize;
 
+  //K values used in hashing algorithm (Independent of SHA type)
   const std::vector<uint> K = {
                             0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
                             0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -46,21 +47,30 @@ private:
                             0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
                             0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
 
+  //Pads and parses the hex value input to the hasher
   std::vector<uint> padParseInput(std::string& inputHex);
+  //Right circular rotation of n bits in input value x
   uint rotr(uint x, uint n);
+  //Intermediate functions for hashing
   uint bSigmaSub0(uint x);
   uint bSigmaSub1(uint x);
   uint sSigmaSub0(uint x);
   uint sSigmaSub1(uint x);
   uint chFunc(uint x, uint y, uint z);
   uint majFunc(uint x, uint y, uint z);
-public:
 
+public:
+  //Number of bits in each word
   static const uint bitsInWord = 32;
+  //Number of words in each block
   static const uint wordsInBlock = 16;
-  const uint hexCharsInWord = 8;
+  //Number of hex chars in each word
+  static const uint hexCharsInWord = 8;
+  //Constructor with parameter for requested output block size in bits
   SHAHash(uint reqBlockSize);
+  //Gets the output block size of the hasher
   uint getBlockSize();
+  //Hashes the input hex value
   std::string hash(std::string inputHex);
 };
 

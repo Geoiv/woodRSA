@@ -5,9 +5,11 @@
 #include "./head/SHAHash.hpp"
 using namespace std;
 
+/*Constructor with parameter for requested SHA output block size*/
 SHAHash::SHAHash(uint reqBlockSize)
 {
-  if (reqBlockSize == blockChoice224)
+  //SHA-224 is to be used
+  if (reqBlockSize == sha224OutLen)
   {
     h0 = 0xc1059ed8;
     h1 = 0x367cd507;
@@ -18,10 +20,11 @@ SHAHash::SHAHash(uint reqBlockSize)
     h6 = 0x64f98fa7;
     h7 = 0xbefa4fa4;
 
-    outputBlockSize = 224;
+    outputBlockSize = sha224OutLen;
     usedWorkingVarCount = 7;
   }
-  else if (reqBlockSize == blockChoice256)
+  //SHA-256 is to be used
+  else if (reqBlockSize == sha256OutLen)
   {
     h0 = 0x6a09e667;
     h1 = 0xbb67ae85;
@@ -32,10 +35,10 @@ SHAHash::SHAHash(uint reqBlockSize)
     h6 = 0x1f83d9ab;
     h7 = 0x5be0cd19;
 
-    outputBlockSize = 256;
+    outputBlockSize = sha256OutLen;
     usedWorkingVarCount = 8;
   }
-
+  //Invalid block size request
   else
   {
     cout << "Input block size for SHA hash was invalid." << endl;
@@ -43,11 +46,10 @@ SHAHash::SHAHash(uint reqBlockSize)
 
 }
 
+/*Pads and parses input passed to the hasher as specified in FIPS 180-4*/
 vector<uint> SHAHash::padParseInput(string& inputHex)
 {
   //Padding
-  const uint bitsInHexChar = 4;
-  const uint hexBase = 16;
   const uint finalPaddingBits = 64;
   const uint finalPaddingChars = finalPaddingBits / bitsInHexChar;
   const uint padFinder0 = 448 / bitsInHexChar;
@@ -65,6 +67,7 @@ vector<uint> SHAHash::padParseInput(string& inputHex)
     inputHex += "0";
   }
 
+  //Conversion to hex
   stringstream hexStream;
   hexStream << hex << l * bitsInHexChar;
   string finalPadString = hexStream.str();
@@ -74,7 +77,7 @@ vector<uint> SHAHash::padParseInput(string& inputHex)
   }
   inputHex += finalPadString;
 
-  //Parsing uinto blocks of words
+  //Parsing into blocks of words
   vector<uint> inputWords;
   uint wordCount = inputHex.length() / hexCharsInWord;
   for (uint i = 0; i < wordCount; i++)
@@ -86,11 +89,13 @@ vector<uint> SHAHash::padParseInput(string& inputHex)
   return inputWords;
 }
 
+/*Right circular rotation of n bits in input value x as specified in FIPS 180-4*/
 uint SHAHash::rotr(uint x, uint n)
 {
   return ((x >> n) | (x << (bitsInWord - n)));
 }
 
+/*Intermediate functions for hashing as specified in FIPS 180-4*/
 uint SHAHash::bSigmaSub0(uint x)
 {
   const uint rotVal0 = 2;
@@ -146,11 +151,13 @@ uint SHAHash::majFunc(uint x, uint y, uint z)
   return (x & y)^(x & z)^(y & z);
 }
 
+/*Gets the output block size of the hasher*/
 uint SHAHash::getBlockSize()
 {
   return outputBlockSize;
 }
 
+/*Hashes the input hex value as specified in FIPS 180-4*/
 string SHAHash::hash(string inputHex)
 {
   const uint hexCharsInWord = 8;
@@ -226,6 +233,7 @@ string SHAHash::hash(string inputHex)
 
   string hashHex = "";
 
+  //Concatenates the needed working variables into the returned string
   for (uint i = 0; i < usedWorkingVarCount; i++)
   {
     stringstream hexStream;

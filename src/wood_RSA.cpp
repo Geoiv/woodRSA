@@ -6,14 +6,12 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 #include "./head/RSACipher.hpp"
 using namespace std;
 
+//TODO remove this
 string globalCipher;
 
+/*Menu for user to input the base format of their input*/
 uint inputBaseMenu()
 {
-  const uint asciiBase = 0;
-  const uint decBase = 10;
-  const uint binBase = 2;
-  const uint hexBase = 16;
 
   string menuString = "Please select the format your input is in \n1. Decimal"
     "\n2. Binary\n3. Hexadecimal\n4. ASCII";
@@ -54,18 +52,21 @@ uint inputBaseMenu()
   }
 }
 
-
+/*Gets text input from user*/
 bool getTextFromUser(string& outputString)
 {
   // uint inputBase = inputBaseMenu();
   return true;
 }
+/*Gets text input from files*/
 bool getTextFromFile(string& outputString)
 {
   // uint inputBase = inputBaseMenu();
   return true;
 }
 
+/*Gets user choice of whether to input data manually or from a file*/
+//TODO manual input maybe should be confirmed? 140-2
 bool textInputMenu(string& outputString)
 {
 
@@ -114,6 +115,7 @@ bool textInputMenu(string& outputString)
   }
 }
 
+/*Displays menu for encryption*/
 void encryptionMenu(RSACipher& cipher)
 {
   cout << "Encryption selected." << endl;
@@ -129,9 +131,12 @@ void encryptionMenu(RSACipher& cipher)
   cout << cipherText << endl;
 }
 
+/*Displays menu for decryption*/
 void decryptionMenu(RSACipher& cipher)
 {
   cout << "Decryption selected." << endl;
+
+
   string cipherText = globalCipher;
   string plainText = "";
   // if(!textInputMenu(cipherText))
@@ -139,9 +144,49 @@ void decryptionMenu(RSACipher& cipher)
   //   cout << "Text input failed!" << endl;
   // }
 
-  cipher.decrypt(cipherText, plainText);
+  string menuString = "\nPlease select your desired option: "
+    "\n1. Standard Decryption\n2. CRT Decryption\n";
+
+  //User input choice
+  string userChoice;
+
+  //Repeatedly prompts user for desired function until
+  //user quits or closes the program.
+  bool smallLoop = true;
+  while (smallLoop)
+  {
+    //Displays menu
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+    bool crtFlag;
+    //User wants standard
+    if (userChoice == "1")
+    {
+      crtFlag = true;
+      cout << "Standard decryption selected. " << endl;
+      cipher.decrypt(cipherText, plainText, crtFlag);
+      smallLoop = false;
+    }
+    //User wants CRT
+    else if (userChoice == "2")
+    {
+      crtFlag = false;
+      cout << "CRT decryption selected. " << endl;
+      cipher.decrypt(cipherText, plainText, crtFlag);
+      smallLoop = false;
+    }
+    //Invalid input
+    else
+    {
+      cout << "Input must be either 1 or 2. Try again. " << endl;
+    }
+  }
   cout << plainText << endl;
 }
+
+/*Displays menu for signing*/
 void signingMenu(RSACipher& cipher)
 {
   cout << "Signing selected." << endl;
@@ -151,11 +196,50 @@ void signingMenu(RSACipher& cipher)
   // {
   //   cout << "Text input failed!" << endl;
   // }
+  string menuString = "\nPlease select your desired option: "
+    "\n1. Standard Signing\n2. CRT Signing\n";
 
-  cipher.sign(plainText, cipherText);
+  //User input choice
+  string userChoice;
+
+  //Repeatedly prompts user for desired function until
+  //user quits or closes the program.
+  bool smallLoop = true;
+  while (smallLoop)
+  {
+    //Displays menu
+    cout << menuString << endl;
+    cout << "Choice: ";
+    //Gets user menu choice
+    getline(cin, userChoice);
+    bool crtFlag;
+    //User wants standard
+    if (userChoice == "1")
+    {
+      crtFlag = true;
+      cout << "Standard Signing selected. " << endl;
+      cipher.sign(cipherText, plainText, crtFlag);
+      smallLoop = false;
+    }
+    //User wants CRT
+    else if (userChoice == "2")
+    {
+      crtFlag = false;
+      cout << "CRT Signing selected. " << endl;
+      cipher.sign(cipherText, plainText, crtFlag);
+      smallLoop = false;
+    }
+    //Invalid input
+    else
+    {
+      cout << "Input must be either 1 or 2. Try again. " << endl;
+    }
+  }
   globalCipher = cipherText;
   cout << cipherText << endl;
 }
+
+/*Displays menu for authentication*/
 void authenticationMenu(RSACipher& cipher)
 {
   cout << "Authentication selected." << endl;
@@ -170,6 +254,7 @@ void authenticationMenu(RSACipher& cipher)
   cout << plainText << endl;
 }
 
+/*Displays menu for keys*/
 //TODO user input keys, clear keys
 void keyOptMenu(RSACipher& cipher)
 {
@@ -212,6 +297,7 @@ void keyOptMenu(RSACipher& cipher)
   }
 }
 
+/*Displays menu for overall RSA algorithm*/
 int main()
 {
   cout << "FIPS COMPLIANT RSA 2048 & SHA-224 - GEORGE WOOD" << endl;
@@ -237,32 +323,37 @@ int main()
     //Gets user menu choice
     getline(cin, userChoice);
 
-    //User is not quitting, wants q-learning
+    //User wants to encrypt
     if (userChoice == "1")
     {
       encryptionMenu(cipher);
     }
-    //User is not quitting, wants SARSA
+    //User wants to decrypt
     else if (userChoice == "2")
     {
       decryptionMenu(cipher);
     }
+    //User wants to sign
     else if (userChoice == "3")
     {
       signingMenu(cipher);
     }
+    //User wants to authenticate
     else if (userChoice == "4")
     {
       authenticationMenu(cipher);
     }
+    //User wants to view key options
     else if (userChoice == "5")
     {
       keyOptMenu(cipher);
     }
+    //User wants to quit
     else if (userChoice == "6")
     {
       keepLoop = false;
     }
+    //Invalid input
     else
     {
       cout << "Input must be either 1, 2, 3, or 4. Try again. " << endl;

@@ -9,9 +9,11 @@ RSACipher.cpp - George Wood - RSA 2048 and SHA 224
 #include <iostream>
 #include "./head/RSACipher.hpp"
 #include "./head/SHAHash.hpp"
+#include "./head/RandGen.hpp"
 using namespace std;
 
-/*Default constructor for the RSA cipher - defaults to RSA-2048*/
+/*Default constructor for the RSA cipher - defaults to RSA-2048
+  Sets nLen and securityStrength accordingly.*/
 RSACipher::RSACipher()
 {
   nLen = nLen1;
@@ -22,36 +24,46 @@ RSACipher::RSACipher()
 /*Constructor for specified nLen*/
 RSACipher::RSACipher(uint inputNLen)
 {
+  //Sets nLen and securityStrength according to the requested nLen
   if (inputNLen == nLen0 || inputNLen == nLen1 || inputNLen == nLen2)
   {
     nLen = inputNLen;
     securityStrength = secStrengthPairs.at(inputNLen);
     shaOutLen = shaBlockPairs.at(inputNLen);
   }
+  //Invalid nLen request
   else
   {
     cout << "Invalid nLen input." << endl;
   }
 }
 
+/*Hashes the input integer*/
 BigInt RSACipher::hashAlg(const BigInt inputX)
 {
-
+  //SHA hasher
   SHAHash sha(shaOutLen);
+  //String for input hex
   string inputHex = inputX.get_str(hexBase);
-  //Length of string returned  by above function is strlen + 1
+  //Gets hash value
   string hashedHex = sha.hash(inputHex);
+  //Loads hash value into a BigInt and returns it
   BigInt hashedInt;
   hashedInt.set_str(hashedHex, hexBase);
   return hashedInt;
 }
 
+/*Utilizes a sieve procedure to find primes below input limit value*/
 vector<bool> RSACipher::sieveProcedure(uint limitVal)
 {
+  //Smallest prime number is 2
   const uint minPrime = 2;
+  //Vector of all values less than the limitVal (index of each bool is the #)
   vector<bool> primes(limitVal, true);
+  //0 and 1 are trivially nonprime
   primes.at(0) = false;
   primes.at(1) = false;
+  //Primality checks each val in the vector, marks those that are not as false
   for (uint i = minPrime; i < limitVal; i++)
   {
     if (primes.at(i))
@@ -62,20 +74,21 @@ vector<bool> RSACipher::sieveProcedure(uint limitVal)
       }
     }
   }
-
+  //Returns vector of marked prime indicies
   return primes;
 }
 
+/*Tests input number c for primality*/
 bool RSACipher::primalityTest(BigInt c)
 {
   //1. Prepare a table of primes < sqrt(c) using the sieve procedure in (C.8)
   //vector<BigInt> smallerPrimes = sieveProcedure(sqrt(c));
-
-  //2. Divide potential prime by all values in table.
-  //If divisible, return failure
   BigInt testPrime = 2;
   BigInt rootC = sqrt(c);
   vector<bool> primes = sieveProcedure(rootC.get_ui());
+
+  //2. Divide potential prime by all values in table.
+  //If divisible, return failure
   for (uint i = 0; i < primes.size(); i++)
   {
     if (primes.at(i))
@@ -87,10 +100,12 @@ bool RSACipher::primalityTest(BigInt c)
       }
     }
   }
+  //Return success
   return true;
 }
 
-//Appendix C.6 0 Shawe-Taylor Random Prime Routine
+/*Uses the Shawe-Taylor random prime routine specified in FIPS 186-4
+  Appendix C.6 to generate a random prime of a specified bit length*/
 bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   BigInt& outputPrime, BigInt& primeSeed, BigInt& pGenCounter)
 {
@@ -249,18 +264,8 @@ bool RSACipher::randomPrime(const uint length, const BigInt inputSeed,
   }
 }
 
-// bool RSACipher::genFirstSeed(BigInt& seed)
-// {
-//   //1. If invalid nLen, return failure (done in constructor)
-//   //2. Set security_strength to corresponding val for nLen
-//        (done in constructor)
-//   //3. Obtain (2 * security_strength) bit string from a valid RBG
-//   seed.set_str(genRandBits(securityStrength * 2), 2);
-//   //4. Return success
-//   return true;
-// }
-
-//Appendix C.10
+/*Generates a prime based on auxiliary primes using the method specified in
+  FIPS 186-4 Appendix C.10*/
 bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   const uint n2, const BigInt firstSeed, BigInt& outputPrime, BigInt& primeSeed)
 {
@@ -468,11 +473,9 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   return true;
 }
 
-/*
-Generates the p & q, the seeds needed for RSA key generation.
-seedLen must be larger than N.
-Section B.3.4
-*/
+/*Generates the p & q, the seeds needed for RSA key generation, using the
+  method given in FIPS 186-4 Section B.3.4.
+  seedLen must be larger than N.*/
 bool RSACipher::genPrimes(const BigInt seed)
 {
   //Bitlength for auxiliary primes (p1, p2, q1, and q2)
@@ -495,8 +498,6 @@ bool RSACipher::genPrimes(const BigInt seed)
 
   BigInt pSeed = 0;
   BigInt qSeed = 0;
-
-
 
   //6. Generate p:
   //6.1 Using l = nlen/2, n1 = bitLength, n2 = bitLength,
@@ -552,7 +553,7 @@ bool RSACipher::genPrimes(const BigInt seed)
   return true;
 }
 
-//Generates keys for the RSA system.
+/*Generates keys e and d, as well as n, for the RSA system*/
 bool RSACipher::genKeys()
 {
   //Section B.3.2.1
@@ -575,10 +576,12 @@ bool RSACipher::genKeys()
   BigInt exp2_256;
   mpz_ui_pow_ui(exp2_256.get_mpz_t(), 2, 256);
   e = randGen.get_z_range(exp2_256);
+  //If the value is negative (check for modulus irregularities in GMP library)
   if ((e % 2) < 0)
   {
     e += 2;
   }
+  //If e is too small, too large, or is not odd
   while ((e <= exp2_16) || (e >= exp2_256) || ((e % 2) != 1))
   {
     e = randGen.get_z_range(exp2_256);
@@ -589,7 +592,6 @@ bool RSACipher::genKeys()
   }
 
   //Generates primes p and q for key generation
-  //Section B.3.4
   if(!genPrimes(seed))
   {
     cout << "Generation of prime values p & q failed!" << endl;
@@ -611,16 +613,17 @@ bool RSACipher::genKeys()
   return true;
 }
 
+/*Displays key info for this RSA system instance*/
 void RSACipher::displayKeyInfo()
 {
-  const uint outputBase = 16;
-  cout << "Public key (e): " << e.get_str(outputBase) << endl;
-  cout << endl << "Private key (d): " << d.get_str(outputBase) << endl;
-  cout << endl << "n: " << n.get_str(outputBase) << endl;
-  cout << endl << "p: " << p.get_str(outputBase) << endl;
-  cout << endl << "q: " << q.get_str(outputBase) << endl << endl;
+  cout << "Public key (e): " << e.get_str(hexBase) << endl;
+  cout << endl << "Private key (d): " << d.get_str(hexBase) << endl;
+  cout << endl << "n: " << n.get_str(hexBase) << endl;
+  cout << endl << "p: " << p.get_str(hexBase) << endl;
+  cout << endl << "q: " << q.get_str(hexBase) << endl << endl;
 }
 
+/*Mask generation function for OAEP mechanisms*/
 bool RSACipher::maskGenFunc(BigInt seed, uint maskLen, BigInt& mask)
 {
   if (maskLen > (pow(2, 32) * shaOutLen))
@@ -645,10 +648,7 @@ bool RSACipher::maskGenFunc(BigInt seed, uint maskLen, BigInt& mask)
   return true;
 }
 
-/*RSAES-OAEP as specified in PKCS #1 version 2.2
-  Labels are not utilized, as they are not needed in this context.
-  TODO finish pkcs 2.2
-*/
+/*Standard RSA encryption*/
 bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 {
   if (e == 0 || d == 0 || n == 0)
@@ -661,56 +661,8 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
-
-  uint mLen = mpz_sizeinbase(pt.get_mpz_t(), binBase);
-  const uint additPadbits = (2 * 8);
-  if (mLen > (nLen - (2 * shaOutLen) - additPadbits))
-  {
-    cout << "Input too large!" << endl;
-  }
-
-  string lHash;
-  if (shaOutLen == sha0 || shaOutLen == sha1)
-  {
-    lHash = sha224LHash;
-  }
-  else if (shaOutLen == sha2)
-  {
-    lHash = sha256LHash;
-  }
-
-  gmp_randclass randGen(gmp_randinit_mt);
-  randGen.seed(clock());
-  string paddingString((nLen - mLen - (2 * shaOutLen) - additPadbits), '0');
-
-  const string hexZero = "00";
-  const string hexOne = "01";
-
-  string concatString = lHash + paddingString + hexOne + plainTextString;
-  BigInt dataBlock;
-  dataBlock.set_str(concatString, hexBase);
-
-  BigInt seed = randGen.get_z_bits(shaOutLen);
-
-  BigInt dbMask;
-  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
-  {
-    cout << "Data block mask generation failed." << endl;
-    return false;
-  }
-  BigInt maskedDB = dataBlock^dbMask;
-  BigInt seedMask;
-  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
-  {
-    cout << "Seed mask generation failed." << endl;
-    return false;
-  }
-  BigInt maskedSeed = seed^seedMask;
-  string emString = hexZero + maskedSeed.get_str(hexBase) + maskedDB.get_str(hexBase);
-  BigInt em;
-  em.set_str(emString, hexBase);
   BigInt ct;
-  // mpz_powm(ct.get_mpz_t(), em.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  //ct = pt^e % n
   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   cipherTextString = ct.get_str(hexBase);
   if (cipherTextString.size() % 2 != 0)
@@ -720,10 +672,38 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   return true;
 }
 
-bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
+/*RSAES-OAEP encryption as specified in PKCS #1 version 2.2
+  Labels are not utilized, as they are not needed in this context.
+  TODO finish pkcs 2.2*/
+bool RSACipher::encryptOAEP(string plainTextString, string& cipherTextString)
 {
-  const string hexZero = "00";
-  const string hexOne = "01";
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt pt;
+  pt.set_str(plainTextString, hexBase);
+
+
+
+  BigInt ct;
+
+  mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  cipherTextString = ct.get_str(hexBase);
+  if (cipherTextString.size() % 2 != 0)
+  {
+    cipherTextString = "0" + cipherTextString;
+  }
+  return true;
+}
+
+/*Standard RSA decryption with options for CRT*/
+bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
+                        bool crtFlag)
+{
 
   if (e == 0 || d == 0 || n == 0)
   {
@@ -734,91 +714,141 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
 
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
-  /*
-  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) != nLen)
-  {
-    cout << mpz_sizeinbase(ct.get_mpz_t(), binBase) << endl;
-    cout << "Ciphertext is not of proper nLen." << endl;
-    return false;
-  }
-  if (nLen < ((2 * shaOutLen) + 2))
-  {
-    cout << "nLen too small." << endl;
-    return false;
-  }
 
-  string lHash;
-  if (shaOutLen == sha0 || shaOutLen == sha1)
+  BigInt pt;
+
+  //If CRT decryption is to be used
+  if (crtFlag)
   {
-    lHash = sha224LHash;
-  }
-  else if (shaOutLen == sha2)
-  {
-    lHash = sha256LHash;
-  }
-
-  const uint hexCharsInOctet = 2;
-
-  if (cipherTextString.substr(0, hexCharsInOctet).compare(hexZero) != 0)
-  {
-    cout << "Y is nonZero!" << endl;
-    return false;
-  }
-
-  BigInt maskedSeed;
-  maskedSeed.set_str(cipherTextString.substr(hexCharsInOctet, shaOutLen),
-                                             hexBase);
-  BigInt maskedDB;
-  maskedDB.set_str(cipherTextString.substr(hexCharsInOctet + shaOutLen,
-                                           (nLen - shaOutLen - 1)), hexBase);
-  BigInt seedMask;
-  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
-  {
-    cout << "Seed mask generation failed." << endl;
-    return false;
-  }
-  BigInt seed = maskedSeed^seedMask;
-  BigInt dbMask;
-  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
-  {
-    cout << "Data block mask generation failed." << endl;
-    return false;
-  }
-
-
-
-  BigInt dataBlock = maskedDB^dbMask;
-  string dbString = dataBlock.get_str(hexBase);
-
-  string lHashPrime = dbString.substr(0, shaOutLen);
-  if (shaOutLen == sha0 || shaOutLen == sha1)
-  {
-    if (lHashPrime.compare(sha224LHash) != 0)
+    BigInt dP = d % (p - 1);
+    if (dP < 0)
     {
-      cout << "lHash' does not equal lHash!" << endl;
+      dP += (p - 1);
+    }
+    BigInt dQ = d % (q - 1);
+    if (dP < 0)
+    {
+      dQ += (q - 1);
+    }
+    BigInt qInv;
+    if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
+    {
+      cout << "Error getting qInv!" << endl;
       return false;
     }
-  }
-  else if (shaOutLen == sha2)
-  {
-    if (lHashPrime.compare(sha256LHash) != 0)
+    BigInt m1;
+    BigInt m2;
+
+    mpz_powm(m1.get_mpz_t(), ct.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+    mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+
+    BigInt h = (qInv * (m1 - m2)) % p;
+    if (h < 0)
     {
-      cout << "lHash' does not equal lHash!" << endl;
-      return false;
+      h += p;
     }
+    //pt = m2 + (h * q)
+    pt = m2 + (h * q);
+  }
+  //CRT is not to be used
+  else
+  {
+    //pt = ct^d % n
+    mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
   }
 
-  uint oneIndex = dbString.find(hexOne, shaOutLen);
-  if (oneIndex == dbString.size())
+  plainTextString = pt.get_str(hexBase);
+  if (plainTextString.size() % 2 != 0)
   {
-    cout << "Padding '01' not found!" << endl;
+    plainTextString = "0" + plainTextString;
+  }
+
+  return true;
+}
+
+/*RSAES-OAEP decryption as specified in PKCS #1 version 2.2 with options for CRT
+  Labels are not utilized, as they are not needed in this context.
+  TODO finish pkcs 2.2*/
+bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
+                            bool crtFlag)
+{
+
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
     return false;
   }
 
-  string m = dbString.substr(oneIndex + hexCharsInOctet);
-  BigInt mInt;
-  mInt.set_str(m, hexBase);
-  */
+  BigInt ct;
+  ct.set_str(cipherTextString, hexBase);
+
+  BigInt pt;
+
+  if (crtFlag)
+  {
+    BigInt dP = d % (p - 1);
+    if (dP < 0)
+    {
+      dP += (p - 1);
+    }
+    BigInt dQ = d % (q - 1);
+    if (dP < 0)
+    {
+      dQ += (q - 1);
+    }
+    BigInt qInv;
+    if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
+    {
+      cout << "Error getting qInv!" << endl;
+      return false;
+    }
+    BigInt m1;
+    BigInt m2;
+
+    mpz_powm(m1.get_mpz_t(), ct.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+    mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+
+    BigInt h = (qInv * (m1 - m2)) % p;
+    if (h < 0)
+    {
+      h += p;
+    }
+
+    pt = m2 + (h * q);
+  }
+  else
+  {
+    mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+  }
+
+  plainTextString = pt.get_str(hexBase);
+  if (plainTextString.size() % 2 != 0)
+  {
+    plainTextString = "0" + plainTextString;
+  }
+
+  return true;
+}
+
+/*Standard RSA signing with options for CRT*/
+bool RSACipher::sign(string plainTextString, string& cipherTextString,
+                     bool crtFlag)
+{
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt pt;
+  pt.set_str(plainTextString, hexBase);
+
+  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt dP = d % (p - 1);
   if (dP < 0)
@@ -838,28 +868,27 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString)
   }
   BigInt m1;
   BigInt m2;
-
-  // mpz_powm(m1.get_mpz_t(), mInt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
-  // mpz_powm(m2.get_mpz_t(), mInt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
-  mpz_powm(m1.get_mpz_t(), ct.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
-  mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+  mpz_powm(m1.get_mpz_t(), pt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+  mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
 
   BigInt h = (qInv * (m1 - m2)) % p;
   if (h < 0)
   {
     h += p;
   }
-
-  BigInt pt = m2 + (h * q);
-  plainTextString = pt.get_str(hexBase);
-  if (plainTextString.size() % 2 != 0)
+  BigInt ct = m2 + (h * q);
+  cipherTextString = ct.get_str(hexBase);
+  if (cipherTextString.size() % 2 != 0)
   {
-    plainTextString = "0" + plainTextString;
+    cipherTextString = "0" + cipherTextString;
   }
   return true;
 }
-
-bool RSACipher::sign(string plainTextString, string& cipherTextString)
+/*RSASSA-PSS signing as specified in PKCS #1 version 2.2 with options for CRT
+  Labels are not utilized, as they are not needed in this context.
+  TODO finish pkcs 2.2*/
+bool RSACipher::signPSS(string plainTextString, string& cipherTextString,
+                     bool crtFlag)
 {
   if (e == 0 || d == 0 || n == 0)
   {
@@ -911,6 +940,31 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString)
   return true;
 }
 bool RSACipher::auth(string cipherTextString, string& plainTextString)
+{
+  if (e == 0 || d == 0 || n == 0)
+  {
+    cout << "Key data not available! Please visit the key option menu to "
+      "generate RSA keys." << endl;
+    return false;
+  }
+
+  BigInt ct;
+  ct.set_str(cipherTextString, hexBase);
+
+  BigInt pt;
+  mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  plainTextString = pt.get_str(hexBase);
+  if (plainTextString.size() % 2 != 0)
+  {
+    plainTextString = "0" + plainTextString;
+  }
+  return true;
+}
+/*RSASSA-PSS authentication as specified in PKCS #1 version 2.2 with options
+  for CRT.
+  Labels are not utilized, as they are not needed in this context.
+  TODO finish pkcs 2.2*/
+bool RSACipher::authPSS(string cipherTextString, string& plainTextString)
 {
   if (e == 0 || d == 0 || n == 0)
   {
