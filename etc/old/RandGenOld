@@ -12,7 +12,6 @@ RandGen.cpp - George Wood
   typedef mpz_class BigInt;
 using namespace std;
 
-//TODO discover what state handle means exactly
 bool RandGen::getEntropyInput(uint& entropyInput, uint entropySize)
 {
   for (uint i = 0; i < entropySize; i++)
@@ -37,7 +36,6 @@ bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
     temp += sha.hash(hexStream.str() + inputHex);
     counter++;
   }
-  //TODO make sure this division works as integer division
   outputHex = temp.substr(0, bitsToReturn / bitsInHexChar);
   return true;
 }
@@ -240,7 +238,6 @@ bool RandGen::rand(uint requestedBitCount, string additInput)
   {
     w = sha.hash(data);
     W = W + w;
-    //TODO finish this
     //data = (data + 1) % (2^440);
   }
   //12.
@@ -248,7 +245,6 @@ bool RandGen::rand(uint requestedBitCount, string additInput)
   //13.
   string H = sha.hash("03" + V);
   //14.
-  //TODO more 2^440
   //V = (V + H + C + reseedCounter) % (2^440)
   //15. reseedCounter++
   reseedCounter++;

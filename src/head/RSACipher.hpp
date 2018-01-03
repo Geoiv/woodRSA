@@ -53,6 +53,12 @@ private:
     {nLen2, sha256OutLen}
   };
 
+  //Vals for using in hash algorithms during OAEP mechanisms
+  const std::string sha224LHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4"
+                                  "649b934ca495991b";
+  const std::string sha256LHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4"
+                                  "649b934ca495991b7852b855";
+
   //RSA key values
   //Public key
   BigInt e = 0;
@@ -106,7 +112,6 @@ public:
   //RSA decryption using OAEP mechanisms w/ CRT option
   bool decryptOAEP(std::string cipherTextString, std::string& plainTextString,
                    bool crtFlag);
-  //TODO RSASSA-PSS
   //Standard RSA signing w/ CRT option
   bool sign(std::string plainTextString, std::string& cipherTextString,
             bool crtFlag);

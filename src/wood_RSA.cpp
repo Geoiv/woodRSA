@@ -66,7 +66,7 @@ bool getTextFromFile(string& outputString)
 }
 
 /*Gets user choice of whether to input data manually or from a file*/
-//TODO manual input maybe should be confirmed? 140-2
+//TODO manual input, should be confirmed. 140-2
 bool textInputMenu(string& outputString)
 {
 
@@ -218,7 +218,7 @@ void signingMenu(RSACipher& cipher)
     {
       crtFlag = true;
       cout << "Standard Signing selected. " << endl;
-      cipher.sign(cipherText, plainText, crtFlag);
+      cipher.sign(plainText, cipherText, crtFlag);
       smallLoop = false;
     }
     //User wants CRT
@@ -226,7 +226,7 @@ void signingMenu(RSACipher& cipher)
     {
       crtFlag = false;
       cout << "CRT Signing selected. " << endl;
-      cipher.sign(cipherText, plainText, crtFlag);
+      cipher.sign(plainText, cipherText, crtFlag);
       smallLoop = false;
     }
     //Invalid input
@@ -255,7 +255,6 @@ void authenticationMenu(RSACipher& cipher)
 }
 
 /*Displays menu for keys*/
-//TODO user input keys, clear keys
 void keyOptMenu(RSACipher& cipher)
 {
   cout << "Key Options selected." << endl;

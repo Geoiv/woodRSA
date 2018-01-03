@@ -507,7 +507,7 @@ bool RSACipher::genPrimes(const BigInt seed)
   uint l = nLen / 2;
   uint n1 = bitLength;
   uint n2 = bitLength;
-  cout << "Generating p." << endl;
+  cout << "Generating prime p." << endl;
   if (!genPrimeFromAuxiliaries(l, n1, n2, workingSeed, p, pSeed))
   {
     cout << "Generation of the seed for prime p generation failed!" << endl;
@@ -520,7 +520,7 @@ bool RSACipher::genPrimes(const BigInt seed)
   BigInt absVal = 0;
   BigInt comparisonVal;
   //ComparisonVal = 2^((nLen/2) - 100)
-  cout << "Generating q." << endl;
+  cout << "Generating prime q." << endl;
   mpz_ui_pow_ui(comparisonVal.get_mpz_t(), 2, ((nLen / 2) - 100));
   //Loop to return to step 7 if needed
   while(absVal <= comparisonVal)
@@ -562,20 +562,39 @@ bool RSACipher::genKeys()
   //2. Let security_strength be the security strength associated with nlen,
   //     as specified in SP 800-57, Part 1. (handled in constructor)
 
-  //3. Obtain a string seed of (2 * securityStrength) bits from an RBG
-  //     that supports the securityStrength. (TODO approved RBG)
   //Random generator
-  gmp_randclass randGen(gmp_randinit_mt);
-  randGen.seed(clock());
-  //Seed used for generating primes
-  BigInt seed = randGen.get_z_bits(securityStrength * 2);
+  // gmp_randclass randGen(gmp_randinit_mt);
+  // randGen.seed(clock());
+  RandGen randGen(shaOutLen);
+  if(!randGen.instantiate())
+  {
+    cout << "Initializing RNG failed!" << endl;
+    return false;
+  }
+
+
+  //3. Obtain a string seed of (2 * securityStrength) bits from an RBG
+  //     that supports the securityStrength.
+
+  //BigInt seed = randGen.get_z_bits(securityStrength * 2);
   //4. Return (SUCCESS, seed). (not needed, not a separate function)
+  //Seed used for generating primes
+  BigInt seed;
+  string seedString;
+  randGen.genRandom((securityStrength * 2), seedString);
+  seed.set_str(seedString, hexBase);
 
   //Gets randomized e value, must be odd
-  BigInt exp2_16 = pow(2, 16);
+  uint minEBits = 16;
+  uint maxEBits = 256;
+  BigInt exp2_16 = pow(2, minEBits);
   BigInt exp2_256;
-  mpz_ui_pow_ui(exp2_256.get_mpz_t(), 2, 256);
-  e = randGen.get_z_range(exp2_256);
+  mpz_ui_pow_ui(exp2_256.get_mpz_t(), 2, maxEBits);
+
+  string eString;
+  randGen.genRandom(maxEBits, eString);
+  e.set_str(eString, hexBase);
+  // e = randGen.get_z_range(exp2_256);
   //If the value is negative (check for modulus irregularities in GMP library)
   if ((e % 2) < 0)
   {
@@ -584,7 +603,8 @@ bool RSACipher::genKeys()
   //If e is too small, too large, or is not odd
   while ((e <= exp2_16) || (e >= exp2_256) || ((e % 2) != 1))
   {
-    e = randGen.get_z_range(exp2_256);
+    randGen.genRandom(maxEBits, eString);
+    e.set_str(eString, hexBase);
     if ((e % 2) < 0)
     {
       e += 2;
@@ -661,6 +681,11 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
+  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
+
   BigInt ct;
   //ct = pt^e % n
   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
@@ -687,11 +712,62 @@ bool RSACipher::encryptOAEP(string plainTextString, string& cipherTextString)
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
-
+  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt ct;
+  uint mLen = mpz_sizeinbase(pt.get_mpz_t(), binBase);
+  const uint additPadbits = (2 * 8);
+  if (mLen > (nLen - (2 * shaOutLen) - additPadbits))
+  {
+    cout << "Input too large!" << endl;
+  }
 
-  mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+  string lHash;
+  if (shaOutLen == sha224OutLen)
+  {
+    lHash = sha224LHash;
+  }
+  else if (shaOutLen == sha256OutLen)
+  {
+    lHash = sha256LHash;
+  }
+
+  gmp_randclass randGen(gmp_randinit_mt);
+  randGen.seed(clock());
+  string paddingString((nLen - mLen - (2 * shaOutLen) - additPadbits), '0');
+
+  const string hexZero = "00";
+  const string hexOne = "01";
+
+  string concatString = lHash + paddingString + hexOne + plainTextString;
+  BigInt dataBlock;
+  dataBlock.set_str(concatString, hexBase);
+
+  BigInt seed = randGen.get_z_bits(shaOutLen);
+
+  BigInt dbMask;
+  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
+  {
+    cout << "Data block mask generation failed." << endl;
+    return false;
+  }
+  BigInt maskedDB = dataBlock^dbMask;
+  BigInt seedMask;
+  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
+  {
+    cout << "Seed mask generation failed." << endl;
+    return false;
+  }
+  BigInt maskedSeed = seed^seedMask;
+  string emString = hexZero + maskedSeed.get_str(hexBase) + maskedDB.get_str(hexBase);
+  BigInt em;
+  em.set_str(emString, hexBase);
+
+  mpz_powm(ct.get_mpz_t(), em.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
+
   cipherTextString = ct.get_str(hexBase);
   if (cipherTextString.size() % 2 != 0)
   {
@@ -715,7 +791,13 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
 
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
+
   BigInt pt;
+
 
   //If CRT decryption is to be used
   if (crtFlag)
@@ -772,6 +854,8 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
 bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
                             bool crtFlag)
 {
+  const string hexZero = "00";
+  const string hexOne = "01";
 
   if (e == 0 || d == 0 || n == 0)
   {
@@ -783,7 +867,98 @@ bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
 
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
+
   BigInt pt;
+
+
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) != nLen)
+  {
+    cout << mpz_sizeinbase(ct.get_mpz_t(), binBase) << endl;
+    cout << "Ciphertext is not of proper nLen." << endl;
+    return false;
+  }
+  if (nLen < ((2 * shaOutLen) + 2))
+  {
+    cout << "nLen too small." << endl;
+    return false;
+  }
+
+  string lHash;
+  if (shaOutLen == sha224OutLen)
+  {
+    lHash = sha224LHash;
+  }
+  else if (shaOutLen == sha256OutLen)
+  {
+    lHash = sha256LHash;
+  }
+
+  const uint hexCharsInOctet = 2;
+
+  if (cipherTextString.substr(0, hexCharsInOctet).compare(hexZero) != 0)
+  {
+    cout << "Y is nonZero!" << endl;
+    return false;
+  }
+
+  BigInt maskedSeed;
+  maskedSeed.set_str(cipherTextString.substr(hexCharsInOctet, shaOutLen),
+                                             hexBase);
+  BigInt maskedDB;
+  maskedDB.set_str(cipherTextString.substr(hexCharsInOctet + shaOutLen,
+                                           (nLen - shaOutLen - 1)), hexBase);
+  BigInt seedMask;
+  if(!maskGenFunc(maskedDB, shaOutLen, seedMask))
+  {
+    cout << "Seed mask generation failed." << endl;
+    return false;
+  }
+  BigInt seed = maskedSeed^seedMask;
+  BigInt dbMask;
+  if(!maskGenFunc(seed, (nLen - shaOutLen - 1), dbMask))
+  {
+    cout << "Data block mask generation failed." << endl;
+    return false;
+  }
+
+
+
+  BigInt dataBlock = maskedDB^dbMask;
+  string dbString = dataBlock.get_str(hexBase);
+
+  string lHashPrime = dbString.substr(0, shaOutLen);
+  if (shaOutLen == sha224OutLen)
+  {
+    if (lHashPrime.compare(sha224LHash) != 0)
+    {
+      cout << "lHash' does not equal lHash!" << endl;
+      return false;
+    }
+  }
+  else if (shaOutLen == sha256OutLen)
+  {
+    if (lHashPrime.compare(sha256LHash) != 0)
+    {
+      cout << "lHash' does not equal lHash!" << endl;
+      return false;
+    }
+  }
+
+  uint oneIndex = dbString.find(hexOne, shaOutLen);
+  if (oneIndex == dbString.size())
+  {
+    cout << "Padding '01' not found!" << endl;
+    return false;
+  }
+
+  string m = dbString.substr(oneIndex + hexCharsInOctet);
+  BigInt mInt;
+  mInt.set_str(m, hexBase);
+
 
   if (crtFlag)
   {
@@ -806,8 +981,8 @@ bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
     BigInt m1;
     BigInt m2;
 
-    mpz_powm(m1.get_mpz_t(), ct.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
-    mpz_powm(m2.get_mpz_t(), ct.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+    mpz_powm(m1.get_mpz_t(), mInt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+    mpz_powm(m2.get_mpz_t(), mInt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
 
     BigInt h = (qInv * (m1 - m2)) % p;
     if (h < 0)
@@ -819,7 +994,7 @@ bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
   }
   else
   {
-    mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+    mpz_powm(pt.get_mpz_t(), mInt.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
   }
 
   plainTextString = pt.get_str(hexBase);
@@ -850,33 +1025,42 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
     cout << "Input too large!" << endl;
   }
 
-  BigInt dP = d % (p - 1);
-  if (dP < 0)
-  {
-    dP += (p - 1);
-  }
-  BigInt dQ = d % (q - 1);
-  if (dP < 0)
-  {
-    dQ += (q - 1);
-  }
-  BigInt qInv;
-  if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
-  {
-    cout << "Error getting qInv!" << endl;
-    return false;
-  }
-  BigInt m1;
-  BigInt m2;
-  mpz_powm(m1.get_mpz_t(), pt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
-  mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+  BigInt ct;
 
-  BigInt h = (qInv * (m1 - m2)) % p;
-  if (h < 0)
+  if (crtFlag)
   {
-    h += p;
+    BigInt dP = d % (p - 1);
+    if (dP < 0)
+    {
+      dP += (p - 1);
+    }
+    BigInt dQ = d % (q - 1);
+    if (dP < 0)
+    {
+      dQ += (q - 1);
+    }
+    BigInt qInv;
+    if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
+    {
+      cout << "Error getting qInv!" << endl;
+      return false;
+    }
+    BigInt m1;
+    BigInt m2;
+    mpz_powm(m1.get_mpz_t(), pt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+    mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+
+    BigInt h = (qInv * (m1 - m2)) % p;
+    if (h < 0)
+    {
+      h += p;
+    }
+    ct = m2 + (h * q);
   }
-  BigInt ct = m2 + (h * q);
+  else
+  {
+    mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+  }
   cipherTextString = ct.get_str(hexBase);
   if (cipherTextString.size() % 2 != 0)
   {
@@ -888,56 +1072,65 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
   Labels are not utilized, as they are not needed in this context.
   TODO finish pkcs 2.2*/
 bool RSACipher::signPSS(string plainTextString, string& cipherTextString,
-                     bool crtFlag)
+                        bool crtFlag)
 {
-  if (e == 0 || d == 0 || n == 0)
-  {
-    cout << "Key data not available! Please visit the key option menu to "
-      "generate RSA keys." << endl;
-    return false;
-  }
+ if (e == 0 || d == 0 || n == 0)
+ {
+   cout << "Key data not available! Please visit the key option menu to "
+     "generate RSA keys." << endl;
+   return false;
+ }
 
-  BigInt pt;
-  pt.set_str(plainTextString, hexBase);
+ BigInt pt;
+ pt.set_str(plainTextString, hexBase);
 
-  if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
-  {
-    cout << "Input too large!" << endl;
-  }
+ if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
+ {
+   cout << "Input too large!" << endl;
+ }
 
-  BigInt dP = d % (p - 1);
-  if (dP < 0)
-  {
-    dP += (p - 1);
-  }
-  BigInt dQ = d % (q - 1);
-  if (dP < 0)
-  {
-    dQ += (q - 1);
-  }
-  BigInt qInv;
-  if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
-  {
-    cout << "Error getting qInv!" << endl;
-    return false;
-  }
-  BigInt m1;
-  BigInt m2;
-  mpz_powm(m1.get_mpz_t(), pt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
-  mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+ BigInt ct;
 
-  BigInt h = (qInv * (m1 - m2)) % p;
-  if (h < 0)
-  {
-    h += p;
-  }
-  BigInt ct = m2 + (h * q);
-  cipherTextString = ct.get_str(hexBase);
-  if (cipherTextString.size() % 2 != 0)
-  {
-    cipherTextString = "0" + cipherTextString;
-  }
-  return true;
+ if (crtFlag)
+ {
+   BigInt dP = d % (p - 1);
+   if (dP < 0)
+   {
+     dP += (p - 1);
+   }
+   BigInt dQ = d % (q - 1);
+   if (dP < 0)
+   {
+     dQ += (q - 1);
+   }
+   BigInt qInv;
+   if (!mpz_invert(qInv.get_mpz_t(), q.get_mpz_t(), p.get_mpz_t()))
+   {
+     cout << "Error getting qInv!" << endl;
+     return false;
+   }
+   BigInt m1;
+   BigInt m2;
+   mpz_powm(m1.get_mpz_t(), pt.get_mpz_t(), dP.get_mpz_t(), p.get_mpz_t());
+   mpz_powm(m2.get_mpz_t(), pt.get_mpz_t(), dQ.get_mpz_t(), q.get_mpz_t());
+
+   BigInt h = (qInv * (m1 - m2)) % p;
+   if (h < 0)
+   {
+     h += p;
+   }
+   ct = m2 + (h * q);
+ }
+ else
+ {
+   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
+ }
+ cipherTextString = ct.get_str(hexBase);
+ if (cipherTextString.size() % 2 != 0)
+ {
+   cipherTextString = "0" + cipherTextString;
+ }
+ return true;
 }
 bool RSACipher::auth(string cipherTextString, string& plainTextString)
 {
@@ -950,6 +1143,11 @@ bool RSACipher::auth(string cipherTextString, string& plainTextString)
 
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
+
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt pt;
   mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
@@ -975,6 +1173,11 @@ bool RSACipher::authPSS(string cipherTextString, string& plainTextString)
 
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
+
+  if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
+  {
+    cout << "Input too large!" << endl;
+  }
 
   BigInt pt;
   mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());

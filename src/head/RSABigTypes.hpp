@@ -1,5 +1,5 @@
 /*
-RSATypes.hpp - George Wood
+RSABigTypes.hpp - George Wood
 */
 
 #ifndef __RSABIGTYPES_HPP__

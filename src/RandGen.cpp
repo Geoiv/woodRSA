@@ -13,20 +13,35 @@ using namespace std;
 
 /*Gets the base-2 entropy used to instantiate the generator. An unapproved RNG
   is used for this, which is permitted as stated in FIPS 140-2*/
-bool RandGen::getEntropyInput(string& entropyInput, uint entropySize)
+bool RandGen::getEntropyInput(string& entropyInput, uint entropySize,
+                              uint iters)
 {
   srand(time(NULL));
+  BigInt converter;
+  BigInt converter2;
   string outputEntropy = "";
   uint temp;
-  //Pseudo-randomly selects a 0 or a 1 and appends it to the output string.
-  for (uint i = 0; i < entropySize; i++)
+  bool firstIter = true;
+  for (uint i = 0; i < iters; i++)
   {
-    temp = (rand() % 2);
-    outputEntropy += to_string(temp);
+  //Pseudo-randomly selects a 0 or a 1 and appends it to the output string.
+    for (uint j = 0; j < entropySize; j++)
+    {
+      temp = (rand() % 2);
+      outputEntropy += to_string(temp);
+    }
+    converter.set_str(outputEntropy, binBase);
+    if (firstIter)
+    {
+      converter2.set_str(outputEntropy, binBase);
+      firstIter = false;
+    }
+    else
+    {
+      converter2 = converter^converter2;
+    }
   }
-  BigInt converter;
-  converter.set_str(outputEntropy, binBase);
-  entropyInput = converter.get_str(hexBase);
+  entropyInput = converter2.get_str(hexBase);
   return true;
 }
 
@@ -71,23 +86,24 @@ RandGen::RandGen(uint shaOutLen)
 
 /*Instantiates the RBG with the requested security strength as stated in
   FIPS SP 800-90A*/
-bool RandGen::instantiate(uint reqSecurityStr)
+bool RandGen::instantiate()
 {
-  //1. If requested security strength is invalid, return failure
+  //1. Handle invalid/too weak security strength;
   //(Also handles step 3)
-  if (reqSecurityStr > shaType)
+  if (shaType == 224)
   {
-    cout << "Security strngth cannot be higher than that of the SHA algorithm."
-      << endl;
+    securityStrength = 192;
+  }
+  else if (shaType == 256)
+  {
+    securityStrength = 256;
+  }
+  else
+  {
+    cout << "Invalid SHA type or security strength." << endl;
     return false;
   }
-  //Invalid security strength requested
-  if ((reqSecurityStr != secStrength0) && (reqSecurityStr != secStrength1) &&
-      (reqSecurityStr != secStrength2) && (reqSecurityStr != secStrength3))
-  {
-    cout << "Invalid security strength requested." << endl;
-    return false;
-  }
+
 
   //2. If personalization string length is greater than 512, return failure.
   // No personalization string utilized
@@ -96,7 +112,7 @@ bool RandGen::instantiate(uint reqSecurityStr)
   //4. entropyInput = getEntropyInput()
   //5. If it fails, return failure
   string entropyInput;
-  if (!getEntropyInput(entropyInput, entropyBitLen))
+  if (!getEntropyInput(entropyInput, entropyBitLen, securityStrength))
   {
     cout << "Getting entropy input failed." << endl;
     return false;
@@ -135,14 +151,15 @@ bool RandGen::instantiate(uint reqSecurityStr)
 
 /*Generates a random number of a specified number of bits, as stated in
   FIPS SP 800-90A*/
-bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandBits)
+bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandNum)
 {
   BigInt twoExp440;
   BigInt temp;
   BigInt temp2;
   mpz_ui_pow_ui(twoExp440.get_mpz_t(), 2, 440);
   SHAHash sha(shaType);
-  //1. I dunno lol
+  //1. If invalid state handle, return failuer
+  //  State handles not used
   //2. Get internal state vars, already handled with instance vars
   //3. If requestedBitCount > 5000, return failure
   if (requestedBitCount > maxReqBits)
@@ -162,7 +179,7 @@ bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandBits)
   //  Additional input not utilized
 
   //8. m = ceil(requestedBitCount / outlen)
-  uint m = ceil(requestedBitCount / shaType);
+  uint m = ceil((double)requestedBitCount / shaType);
   //9. data = V
   string data = V;
   //10. W = null string
@@ -180,7 +197,7 @@ bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandBits)
     //data = (data + 1) % (2^440);
   }
   //12.
-  pseudoRandBits = W.substr(0, (requestedBitCount / bitsInHexChar));
+  pseudoRandNum = W.substr(0, (requestedBitCount / bitsInHexChar));
   //13.
   string H = sha.hash("03" + V);
   //14. V = (V + H + C + reseedCounter) % (2^440)

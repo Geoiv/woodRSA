@@ -1,24 +1,24 @@
-#include <gmpxx.h>
-#include <bitset>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <math.h>
 #include <vector>
-//#include "SHA224.cpp"
+#include "../src/head/RSAConsts.hpp"
+#include "../src/head/RSABigTypes.hpp"
+#include "../src/head/RandGen.hpp"
 using namespace std;
-
-  typedef mpz_class BigInt;
-  typedef mpf_class BigFloat;
-  typedef unsigned int uint;
 
 int main()
 {
-  BigInt x = 5;
-  BigInt y = 10;
-  BigInt z = 12;
-
-  cout << y % x << endl;
-  cout << -y % x << endl;
-  cout << (-y * x) % z << endl;
-
+  RandGen rander(256);
+  rander.instantiate(256);
+  string randNum;
+  rander.genRandom(10, randNum);
+  cout << randNum << endl;
+  rander.genRandom(10, randNum);
+  cout << randNum << endl;
+  rander.genRandom(10, randNum);
+  cout << randNum << endl;
+  rander.genRandom(10, randNum);
+  cout << randNum << endl;
 }

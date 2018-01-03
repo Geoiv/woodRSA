@@ -36,13 +36,13 @@ private:
   //Security strength of this generator
   uint securityStrength;
   //Nonce used as part of the seed
-  ullong instantiationNonce;
+  uint instantiationNonce;
   //Vars for holding seed generation values
   std::string V;
   std::string C;
 
   //Gets the entropy used to instantiate the generator
-  bool getEntropyInput(std::string& entropyInput, uint entropySize);
+  bool getEntropyInput(std::string& entropyInput, uint entropySize, uint iters);
   //Hash function used for instantiation of the generator
   bool hashDf(std::string inputHex, uint bitsToReturn, std::string& outputHex);
 
@@ -50,7 +50,7 @@ public:
   //Constructor with parameter for requested SHA algorithm type
   RandGen(uint shaOutLen);
   //Instantiates the generator
-  bool instantiate(uint reqSecurityStr);
+  bool instantiate();
   //Generates a random number with this generator
   bool genRandom(uint requestedBitCount, std::string& pseudoRandBits);
 };
