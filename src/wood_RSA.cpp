@@ -127,6 +127,7 @@ void encryptionMenu(RSACipher& cipher)
   // }
 
   cipher.encrypt(plainText, cipherText);
+
   globalCipher = cipherText;
   cout << cipherText << endl;
 }
@@ -150,23 +151,20 @@ void decryptionMenu(RSACipher& cipher)
   //User input choice
   string userChoice;
 
-  //Repeatedly prompts user for desired function until
-  //user quits or closes the program.
+  bool crtFlag;
+
   bool smallLoop = true;
   while (smallLoop)
   {
     //Displays menu
+
     cout << menuString << endl;
     cout << "Choice: ";
-    //Gets user menu choice
     getline(cin, userChoice);
-    bool crtFlag;
-    //User wants standard
     if (userChoice == "1")
     {
       crtFlag = true;
       cout << "Standard decryption selected. " << endl;
-      cipher.decrypt(cipherText, plainText, crtFlag);
       smallLoop = false;
     }
     //User wants CRT
@@ -174,15 +172,16 @@ void decryptionMenu(RSACipher& cipher)
     {
       crtFlag = false;
       cout << "CRT decryption selected. " << endl;
-      cipher.decrypt(cipherText, plainText, crtFlag);
       smallLoop = false;
     }
-    //Invalid input
     else
     {
       cout << "Input must be either 1 or 2. Try again. " << endl;
     }
   }
+
+  cipher.decrypt(cipherText, plainText, crtFlag);
+
   cout << plainText << endl;
 }
 
@@ -359,5 +358,3 @@ int main()
     }
   }
 }
-
-//TODO look at assurances 5.3
