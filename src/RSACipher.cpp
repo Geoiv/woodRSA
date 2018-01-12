@@ -643,34 +643,10 @@ void RSACipher::displayKeyInfo()
   cout << endl << "q: " << q.get_str(hexBase) << endl << endl;
 }
 
-/*Mask generation function for OAEP mechanisms*/
-bool RSACipher::maskGenFunc(BigInt seed, uint maskLen, BigInt& mask)
-{
-  if (maskLen > (pow(2, 32) * shaOutLen))
-  {
-    cout << "Requested mask length too long." << endl;
-  }
-  string t = "";
-  const uint cLen = 4 * 8;
-  for (uint counter = 0; counter <= (ceil(maskLen / shaOutLen) - 1); counter++)
-  {
-    BigInt temp = counter;
-    string c = temp.get_str(binBase);
-    for (uint i = 0; i < cLen - c.size(); i++)
-    {
-      c = "0" + c;
-    }
-    temp.set_str(temp.get_str(binBase) + c, binBase);
-    t += hashAlg(temp).get_str(binBase);
-  }
-  BigInt tInt;
-  tInt.set_str(t, binBase);
-  return true;
-}
-
 /*Standard RSA encryption*/
 bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 {
+  //Key info not available
   if (e == 0 || d == 0 || n == 0)
   {
     cout << "Key data not available! Please visit the key option menu to "
@@ -681,15 +657,18 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
+  //If input is too large
   if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
   {
     cout << "Input too large!" << endl;
+    return false;
   }
 
   BigInt ct;
   //ct = pt^e % n
   mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   cipherTextString = ct.get_str(hexBase);
+  //Makes sure output is of even number of digits
   if (cipherTextString.size() % 2 != 0)
   {
     cipherTextString = "0" + cipherTextString;
@@ -703,7 +682,7 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
 bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
                         bool crtFlag)
 {
-
+  //Key info not available
   if (e == 0 || d == 0 || n == 0)
   {
     cout << "Key data not available! Please visit the key option menu to "
@@ -713,14 +692,13 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
 
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
-
+  //If input is too large
   if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
   {
     cout << "Input too large!" << endl;
   }
 
   BigInt pt;
-
 
   //If CRT decryption is to be used
   if (crtFlag)
@@ -763,6 +741,7 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
   }
 
   plainTextString = pt.get_str(hexBase);
+  //Makes sure output is of even number of digits
   if (plainTextString.size() % 2 != 0)
   {
     plainTextString = "0" + plainTextString;
@@ -771,14 +750,12 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
   return true;
 }
 
-//TODO max length for enc and dec
-
-
 
 /*Standard RSA signing with options for CRT*/
 bool RSACipher::sign(string plainTextString, string& cipherTextString,
                      bool crtFlag)
 {
+  //Key info not available
   if (e == 0 || d == 0 || n == 0)
   {
     cout << "Key data not available! Please visit the key option menu to "
@@ -789,13 +766,16 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
   BigInt pt;
   pt.set_str(plainTextString, hexBase);
 
+  //If input is too large
   if (mpz_sizeinbase(pt.get_mpz_t(), binBase) > nLen)
   {
     cout << "Input too large!" << endl;
+    return false;
   }
 
   BigInt ct;
 
+  //CRT, if it is to be used
   if (crtFlag)
   {
     BigInt dP = d % (p - 1);
@@ -826,11 +806,14 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
     }
     ct = m2 + (h * q);
   }
+  //Standard RSA
   else
   {
+    //ct = (pt^d) % n
     mpz_powm(ct.get_mpz_t(), pt.get_mpz_t(), d.get_mpz_t(), n.get_mpz_t());
   }
   cipherTextString = ct.get_str(hexBase);
+  //Makes sure output is of even number of digits
   if (cipherTextString.size() % 2 != 0)
   {
     cipherTextString = "0" + cipherTextString;
@@ -840,6 +823,7 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
 
 bool RSACipher::auth(string cipherTextString, string& plainTextString)
 {
+  //Key info not available
   if (e == 0 || d == 0 || n == 0)
   {
     cout << "Key data not available! Please visit the key option menu to "
@@ -850,14 +834,18 @@ bool RSACipher::auth(string cipherTextString, string& plainTextString)
   BigInt ct;
   ct.set_str(cipherTextString, hexBase);
 
+  //If input is too large
   if (mpz_sizeinbase(ct.get_mpz_t(), binBase) > nLen)
   {
     cout << "Input too large!" << endl;
+    return false;
   }
 
   BigInt pt;
+  //pt = (ct^e) % n
   mpz_powm(pt.get_mpz_t(), ct.get_mpz_t(), e.get_mpz_t(), n.get_mpz_t());
   plainTextString = pt.get_str(hexBase);
+  //Makes sure output is of even number of digits
   if (plainTextString.size() % 2 != 0)
   {
     plainTextString = "0" + plainTextString;

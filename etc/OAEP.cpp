@@ -97,6 +97,31 @@
 //   return true;
 // }
 //
+// /*Mask generation function for OAEP mechanisms*/
+// bool RSACipher::maskGenFunc(BigInt seed, uint maskLen, BigInt& mask)
+// {
+//   if (maskLen > (pow(2, 32) * shaOutLen))
+//   {
+//     cout << "Requested mask length too long." << endl;
+//   }
+//   string t = "";
+//   const uint cLen = 4 * 8;
+//   for (uint counter = 0; counter <= (ceil(maskLen / shaOutLen) - 1); counter++)
+//   {
+//     BigInt temp = counter;
+//     string c = temp.get_str(binBase);
+//     for (uint i = 0; i < cLen - c.size(); i++)
+//     {
+//       c = "0" + c;
+//     }
+//     temp.set_str(temp.get_str(binBase) + c, binBase);
+//     t += hashAlg(temp).get_str(binBase);
+//   }
+//   BigInt tInt;
+//   tInt.set_str(t, binBase);
+//   return true;
+// }
+//
 // ///////////////////////////
 // //        DECRYPT        //
 // ///////////////////////////
