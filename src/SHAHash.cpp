@@ -96,6 +96,7 @@ uint SHAHash::rotr(uint x, uint n)
 }
 
 /*Intermediate functions for hashing as specified in FIPS 180-4*/
+//Uppercase sigma sub 0 equation
 uint SHAHash::bSigmaSub0(uint x)
 {
   const uint rotVal0 = 2;
@@ -107,6 +108,8 @@ uint SHAHash::bSigmaSub0(uint x)
   uint outputX = rotrX0^rotrX1^rotrX2;
   return outputX;
 }
+
+//Uppercase sigma sub 1 equation
 uint SHAHash::bSigmaSub1(uint x)
 {
   const uint rotVal0 = 6;
@@ -118,6 +121,7 @@ uint SHAHash::bSigmaSub1(uint x)
   uint outputX = rotrX0^rotrX1^rotrX2;
   return outputX;
 }
+//Lowercase sigma sub 0 equation
 uint SHAHash::sSigmaSub0(uint x)
 {
   const uint rotVal0 = 7;
@@ -129,7 +133,7 @@ uint SHAHash::sSigmaSub0(uint x)
   uint outputX = rotrX0^rotrX1^shiftX;
   return outputX;
 }
-
+//Lowercase sigma sub 1 equation
 uint SHAHash::sSigmaSub1(uint x)
 {
   const uint rotVal0 = 17;
@@ -160,12 +164,14 @@ uint SHAHash::getBlockSize()
 /*Hashes the input hex value as specified in FIPS 180-4*/
 string SHAHash::hash(string inputHex)
 {
+  //Constant values for moving through data
   const uint hexCharsInWord = 8;
   const uint messageSchedFirst = 16;
   const uint messageSchedSecond = 64;
   const uint roundCount = 64;
   const uint twoExp32 = pow(2, 32);
 
+  //Sets initial hash values, determined by SHA type
   uint hashVals[] = {h0, h1, h2, h3, h4, h5, h6, h7};
   vector<uint> inputWords = padParseInput(inputHex);
 
@@ -178,6 +184,7 @@ string SHAHash::hash(string inputHex)
   uint g;
   uint h;
 
+  //Iterates through hashing procedure until complete
   uint blockCount = inputWords.size() / wordsInBlock;
   for (uint i = 0; i < blockCount; i++)
   {
@@ -234,6 +241,7 @@ string SHAHash::hash(string inputHex)
   string hashHex = "";
 
   //Concatenates the needed working variables into the returned string
+  //If SHA-224 is used, the final working variable is not concatenated
   for (uint i = 0; i < usedWorkingVarCount; i++)
   {
     stringstream hexStream;

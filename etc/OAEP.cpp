@@ -127,7 +127,7 @@
 // ///////////////////////////
 // /*RSAES-OAEP decryption as specified in PKCS #1 version 2.2 with options for CRT
 //   Labels are not utilized, as they are not needed in this context.
-//   TODO finish pkcs 2.2*/
+//   finish pkcs 2.2*/
 // bool RSACipher::decryptOAEP(string cipherTextString, string& plainTextString,
 //                             bool crtFlag)
 // {
@@ -289,7 +289,7 @@
 //
 // /*RSASSA-PSS signing as specified in PKCS #1 version 2.2 with options for CRT
 //   Labels are not utilized, as they are not needed in this context.
-//   TODO finish pkcs 2.2*/
+//   finish pkcs 2.2*/
 // bool RSACipher::signPSS(string plainTextString, string& cipherTextString,
 //                         bool crtFlag)
 // {
@@ -359,7 +359,7 @@
 // /*RSASSA-PSS authentication as specified in PKCS #1 version 2.2 with options
 //   for CRT.
 //   Labels are not utilized, as they are not needed in this context.
-//   TODO finish pkcs 2.2*/
+//   finish pkcs 2.2*/
 // bool RSACipher::authPSS(string cipherTextString, string& plainTextString)
 // {
 //   if (e == 0 || d == 0 || n == 0)

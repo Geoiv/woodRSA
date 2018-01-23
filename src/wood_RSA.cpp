@@ -6,7 +6,6 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 #include "./head/RSACipher.hpp"
 using namespace std;
 
-//TODO remove this
 string globalCipher;
 
 /*Menu for user to input the base format of their input*/
@@ -27,20 +26,22 @@ uint inputBaseMenu()
     //Gets user menu choice
     getline(cin, userChoice);
 
-    //User wants to input text
+    //User wants decimal base input
     if (userChoice == "1")
     {
       return decBase;
     }
-    //User wants file input
+    //User wants binary base input
     else if (userChoice == "2")
     {
         return binBase;
     }
+    //User wants hexidecimal base input
     else if (userChoice == "3")
     {
       return hexBase;
     }
+    //User wants ascii input
     else if (userChoice == "4")
     {
       return asciiBase;
@@ -66,10 +67,8 @@ bool getTextFromFile(string& outputString)
 }
 
 /*Gets user choice of whether to input data manually or from a file*/
-//TODO manual input, should be confirmed. 140-2
 bool textInputMenu(string& outputString)
 {
-
   string menuString = "Text input or input from file? \n1. Text Input"
     "\n2. File Input\n3. Cancel input";
 
@@ -104,10 +103,12 @@ bool textInputMenu(string& outputString)
       }
       return true;
     }
+    //User wants to return to main menu
     else if (userChoice == "3")
     {
       return false;
     }
+    //Invalid input
     else
     {
       cout << "Input must either be 1, 2, or 3. Try again. " << endl;
@@ -151,8 +152,10 @@ void decryptionMenu(RSACipher& cipher)
   //User input choice
   string userChoice;
 
+  //Boolean representing whether CRT is to be used or not
   bool crtFlag;
 
+  //Finds if user wants standard or CRT decryption
   bool smallLoop = true;
   while (smallLoop)
   {
@@ -174,6 +177,7 @@ void decryptionMenu(RSACipher& cipher)
       cout << "CRT decryption selected. " << endl;
       smallLoop = false;
     }
+    //Invalid input
     else
     {
       cout << "Input must be either 1 or 2. Try again. " << endl;
@@ -259,6 +263,7 @@ void keyOptMenu(RSACipher& cipher)
   cout << "Key Options selected." << endl;
   //Number of iterations
 
+  //Prompt message
   string menuString = "Select from the following options:\n1. Generate keys"
     "\n2. View keys\n3. Return to main menu";
 
@@ -284,10 +289,12 @@ void keyOptMenu(RSACipher& cipher)
     {
         cipher.displayKeyInfo();
     }
+    //User wants to return to main menu
     else if (userChoice == "3")
     {
       smallLoop = false;
     }
+    //Invalid input
     else
     {
       cout << "Input must either be 1, 2, or 3. Try again. " << endl;
@@ -300,6 +307,7 @@ int main()
 {
   cout << "FIPS COMPLIANT RSA 2048 & SHA-224 - GEORGE WOOD" << endl;
 
+  //The cipher to be used for any upcoming encyrption or decryption
   RSACipher cipher;
 
   //User input choice

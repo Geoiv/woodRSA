@@ -112,7 +112,7 @@ RandGen::RandGen(uint shaOutLen)
 
 bool RandGen::instantiate(uint reqSecurityStr, string persStr)
 {
-  //TODO check what determines this size
+  //check what determines this size
   const uint maxPersStrSize = 512;
   //1. If requested security strength is invalid, return failure
   //(Also handles step 3)
@@ -199,7 +199,7 @@ bool RandGen::rand(uint requestedBitCount, string additInput)
     return false;
   }
   //4. If requestedSecurityStrength > securityStrength, return FAILURE
-  //TODO is this necessary since it was handled in the instantiation?
+  //is this necessary since it was handled in the instantiation?
 
   //5. If length of additInput > 512, return failure
   if (additInput.size() > maxAdditInputLen)
@@ -210,7 +210,7 @@ bool RandGen::rand(uint requestedBitCount, string additInput)
   //6. If reseedCounter > 100,000, reseed and nullify the additional input
   if (reseedCounter > maxReseedCounterVal)
   {
-    //TODO 1 magic val
+    //1 magic val
     if (!reseed(1, additInput))
     {
       cout << "Reseeding failed." << endl;
@@ -220,7 +220,7 @@ bool RandGen::rand(uint requestedBitCount, string additInput)
   }
   string w;
   //7. If additInput != null, then do
-  //TODO finish this, bigInts for hash outputs
+  //finish this, bigInts for hash outputs
   if (additInput.size() != 0)
   {
     w = sha.hash("02" + V + additInput);
