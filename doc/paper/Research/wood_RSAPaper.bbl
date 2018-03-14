@@ -1,0 +1,68 @@
+\begin{thebibliography}{}
+
+\bibitem[{National Institute of Standards and Technology}, 2001]{NIST:2013:140}
+{National Institute of Standards and Technology} (2001).
+\newblock {\em {FIPS PUB 140-2}: Security Requirements for Cryptographic
+  Modules}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+\newblock Supersedes FIPS PUB 140-1 1994 January 11.
+
+\bibitem[{National Institute of Standards and Technology}, 2013]{NIST:2013:186}
+{National Institute of Standards and Technology} (2013).
+\newblock {\em {FIPS PUB 186-4}: Digital Signature Standard (DSS)}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+\newblock Supersedes FIPS PUB 186-3 2009 June.
+
+\bibitem[{National Institute of Standards and Technology},
+  2015a]{NIST:2015:180}
+{National Institute of Standards and Technology} (2015a).
+\newblock {\em {FIPS PUB 180-4}: Secure Hash Standard}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+\newblock Supersedes FIPS PUB 180-4 2012 March.
+
+\bibitem[{National Institute of Standards and Technology} et~al.,
+  2016]{NIST:2013:80090b}
+{National Institute of Standards and Technology}, {Meltem S{\"o}nmez Turan},
+  Barker, E., Kelse, J., and McKay, K. (2016).
+\newblock {\em {NIST SP 800-90b}: Recommendation for the Entropy Sources Used
+  for Random Bit Generation}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+
+\bibitem[{National Institute of Standards and Technology},
+  2016a]{NIST:2013:80057}
+{National Institute of Standards and Technology}, E. (2016a).
+\newblock {\em {NIST SP 800-57 Part 1 Revision 4}: Recommendation for Key
+  Management}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+
+\bibitem[{National Institute of Standards and Technology},
+  2015b]{NIST:2013:80090a}
+{National Institute of Standards and Technology}, {Elaine Barker}, J. (2015b).
+\newblock {\em {NIST SP 800-90a}: Recommendation for Random Bit Generator (RBG)
+  Constructions}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+
+\bibitem[{National Institute of Standards and Technology},
+  2016b]{NIST:2013:80090c}
+{National Institute of Standards and Technology}, {Elaine Barker}, J. (2016b).
+\newblock {\em {NIST SP 800-90c}: Recommendation for Random Bit Generator (RBG)
+  Constructions}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+
+\bibitem[{National Institute of Standards and Technology},
+  2012]{NIST:2013:800107}
+{National Institute of Standards and Technology}, Q. (2012).
+\newblock {\em {NIST SP 800-107 Revision 1}: Reccomendation for Applications
+  Using Approved Hash Algorithms}.
+\newblock National Institute for Standards and Technology, Gaithersburg, MD,
+  USA.
+\newblock Supersedes FIPS PUB 800-107 2009 February.
+
+\end{thebibliography}

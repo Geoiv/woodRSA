@@ -1,0 +1,389 @@
+% The testflow support page is at:
+% http://www.michaelshell.org/tex/testflow/
+\documentclass[journal]{IEEEtran}
+%
+% If IEEEtran.cls has not been installed into the LaTeX system files,
+% manually specify the path to it like:
+% \documentclass[journal]{../sty/IEEEtran}
+
+
+% *** CITATION PACKAGES ***
+%
+\usepackage{cite}
+% cite.sty was written by Donald Arseneau
+% V1.6 and later of IEEEtran pre-defines the format of the cite.sty package
+% \cite{} output to follow that of the IEEE. Loading the cite package will
+% result in citation numbers being automatically sorted and properly
+% "compressed/ranged". e.g., [1], [9], [2], [7], [5], [6] without using
+% cite.sty will become [1], [2], [5]--[7], [9] using cite.sty. cite.sty's
+% \cite will automatically add leading space, if needed. Use cite.sty's
+% noadjust option (cite.sty V3.8 and later) if you want to turn this off
+% such as if a citation ever needs to be enclosed in parenthesis.
+% cite.sty is already installed on most LaTeX systems. Be sure and use
+% version 5.0 (2009-03-20) and later if using hyperref.sty.
+% The latest version can be obtained at:
+% http://www.ctan.org/pkg/cite
+% The documentation is contained in the cite.sty file itself.
+
+
+% *** GRAPHICS RELATED PACKAGES ***
+%
+\ifCLASSINFOpdf
+  % \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../pdf/}{../jpeg/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\else
+  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+  % will default to the driver specified in the system graphics.cfg if no
+  % driver is specified.
+  % \usepackage[dvips]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../eps/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.eps}
+\fi
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\begin{document}
+%
+% paper title
+% Titles are generally capitalized except for words such as a, an, and, as,
+% at, but, by, for, in, nor, of, on, or, the, to and up, which are usually
+% not capitalized unless they are the first or last word of the title.
+% Linebreaks \\ can be used within to get better formatting as desired.
+% Do not put math or special symbols in the title.
+\title{Efficiency of FIPS-Compliant RSA Cryptosystem Across Various Systems}
+%
+%
+% author names and IEEE memberships
+% note positions of commas and nonbreaking spaces ( ~ ) LaTeX will not break
+% a structure at a ~ so this keeps an author's name from being broken across
+% two lines.
+% use \thanks{} to gain access to the first footnote area
+% a separate \thanks must be used for each paragraph as LaTeX2e's \thanks
+% was not built to handle multiple paragraphs
+%
+
+\author{%
+\begin{tabular}{c} George Wood \\ Truman State University \\ Kirksville, United States \\ glw3638@truman.edu \end{tabular} \and \hspace{2in}
+\begin{tabular}{c} Chetan Jaiswal \\ Truman State University \\ Kirksville, United States \\cjaiswal@truman.edu \end{tabular}}
+
+% make the title area
+\maketitle
+
+% As a general rule, do not put math, special symbols or citations
+% in the abstract or keywords.
+\begin{abstract}
+The RSA cryptosystem has an established position as one of the most secure methods of secret sharing. However, it is also known to be a rather slow algorithm. As a result, the feasibility of its use on large amounts of data depends heavily on the components of the system it is run on. This work will analyze and discuss the efficiency of an RSA-CRT implementation on a range of computer systems. We will discuss the hardware and software components present on each system and compare several measures of the efficiency of execution. Given the increasingly critical nature of efficient and effective cybersecurity, the goal of this study is to contribute towards finding ideal conditions for the execution of this powerful cryptosystem.
+\end{abstract}
+
+% Note that keywords are not normally used for peerreview papers.
+\begin{IEEEkeywords}
+RSA, cryptography, complexity, efficiency.
+\end{IEEEkeywords}
+
+
+% For peer review papers, you can put extra information on the cover
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+% The very first letter is a 2 line initial drop letter followed
+% by the rest of the first word in caps.
+% 
+% form to use if the first word consists of a single letter:
+% \IEEEPARstart{A}{demo} file is ....
+% 
+% form to use if you need the single drop letter followed by
+% normal text (unknown if ever used by the IEEE):
+% \IEEEPARstart{A}{}demo file is ....
+% 
+% Some journals put the first two words in caps:
+% \IEEEPARstart{T}{his demo} file is ....
+% 
+% Here we have the typical use of a "T" for an initial drop letter
+% and "HIS" in caps to complete the first word.
+\IEEEPARstart{A}{s} the scope of data stored in computer systems has expanded, so has the need for effective cybersecurity systems. The RSA cryptosystem, short for Rivest-Shamir-Adleman after its creators, has proven to be one of the most reliable systems available for secret sharing. Due to the notorious factoring problem, breaking RSA encryption is practically and computationally unfeasible using any currently known means. The system is not without faults, however, as the time it requires to operate is well known to be quite large. As a result, the size of messages that it can practically encode is quite small, reducing its use largely to sharing of keys used in other encryption schemes, or identity authentication.
+
+RSA is utilized in several manners that are essential to common digital procedures. For secret sharing, the system can be used to ensure that confidential information, such as a key used for AES, cannot be discovered even if the secret is intercepted by a third party. In terms of average internet use, RSA allows for common users to be assured that the parties they interact with are who they claim to be. Even though the size of data such as these is quite small, these operations have to be performed extremely frequently, making the importance of efficient execution extremely high. As a result, research towards finding ideal running environments for the system is of considerable value.
+
+The work performed for this study aims to discover environments and elements that are conducive to best-case efficiency of RSA. In section 2, we will discuss the basics of the RSA cryptosystem, followed by a description of the implementation used in section 3. Section 4 will give insight on what will be used to measure execution efficiency, and section 5 will provide comparison of the data that is found. 
+% You must have at least 2 lines in the paragraph with the drop letter
+% (should never be an issue)
+
+
+% needed in second column of first page if using \IEEEpubid
+%\IEEEpubidadjcol
+
+
+\section{The RSA Cryptosystem}
+The RSA cryptosystem is a public-key cryptography system that facilitates secret sharing. It makes use of a public key, denoted by \textit{e}, a private key, denoted by \textit{d}, and a modulus value, denoted by \textit{n}. \textit{n} is determined with two distinct large prime numbers \textit{p} and \textit{q}. Depending on which of the two keys are used for encoding, either encryption/decryption or signing/authentication can be accomplished. Standard encryption and decryption is accomplished with two equations. A plaintext message \textit{m} that is encrypted to a ciphertext \textit{c} message with \textit{e} as shown in eqn. 1 can only be decrypted with \textit{d} as shown in eqn. 2.\newline
+
+\textsuperscript{[1]}$c = m^e$ $mod$ $n$
+
+\textsuperscript{[2]}$m = c^d$ $mod$ $n$
+\newline
+
+Signing and authentication can be accomplished via switching the keys used in the equation, as shown in eqn. 3 and eqn. 4 respectively.\newline
+
+\textsuperscript{[3]}$c = m^d$ $mod$ $n$
+
+\textsuperscript{[4]}$m = c^e$ $mod$ $n$
+\newline
+
+An alternative mechanism based on the Chinese Remainder Theorem (CRT) can be used to increase efficiency both for decryption and, as it is analogous to the decryption process, for signing as well. Using this scheme, intermediate values determined using $p$ and $q$ in addition to the inverse of $q$ $mod$ $p$ are utilized. These values are determined as follows:\newline
+
+\textsuperscript{[5]}$dP = (1/e)$ $mod$ $(p - 1)$
+
+\textsuperscript{[6]}$dQ = (1/e)$ $mod$ $(q - 1)$
+
+\textsuperscript{[7]}$qInv = (1/q)$ $mod$ $p$
+
+These values can then be used to compute the output message without such costly operations as $mod n$. Using decryption as an example, this is accomplished as follows:\newline
+
+\textsuperscript{[8]}$m_1 = c^dP$ $mod$ $p$
+
+\textsuperscript{[9]}$m_2 = c^dQ$ $mod$ $q$
+
+\textsuperscript{[10]}$h = qInv(m_1 - m_2)$ $mod$ $p$
+
+\textsuperscript{[11]}$m = m_2 + (h)(q)$
+\newline 
+
+Signing with CRT can be accomplished in the same manner, simply swapping the positions of $m$ and $c$.
+
+\section{Implementation}
+The specific implementation of RSA was coded in C++11, making use of several classes. All RSA-specific operations are performed within the RSACipher class, which in turn makes use of two other classes. The SHAHash class performs any and all hashing operations, and can utilize various forms of SHA, including the commonly used SHA-224 and SHA-256. Lastly, the RandGen class generates random numbers for use in the creation of the primes $p$ and $q$, and the private and public keys.
+
+Given that RSA makes use of prime numbers that are thousands of bits large, the 32- or 64-bit arithmetic currently utilized by many common systems is nowhere near large enough to accommodate the requirements of RSA. To handle this issue, the implementation makes use of the GNU Multiprecision arithmetic library (GMP), which allows for arithmetic operations on numbers of arbitrary bitlength. 
+
+To the greatest extent possible (and necessary), the implementation is compliant with federal guidelines for RSA established across several Federal Information Processing Standards (FIPS) publications created by the National Institute of Standards and Technology (NIST), primarily FIPS 186-4. A complete list of the relevant documentation followed can be found in the references section. The sole exception to compliance is in the RandGen class, which does not make use of a sufficiently strong external entropy/noise source. Given that the focus of this research is on efficiency rather than security, and the difficulty inherent in establishing such a source of randomness, this element was foregone in favor of research progress.
+
+All interaction with the program is accomplished via a simple user interface, allowing for encryption, decryption with or without CRT, signing with or without CRT, authentication, and key generation. Although slight changes were necessary to ensure compatibility across various systems, the core of this interface remained largely the same across all data collection. Attempts were made at a implementation-independent GUI, but were eventually foregone in favor of research progress.
+
+Although there are numerous further guidelines that establish padding schemes and other various additions to RSA such as those provided in PKCS \#1, the focus of this work is on the base cryptosystem, with no such additional systems added.
+
+\section{Methodology}
+In order to gather data on the efficiency of RSA, our code was ran on various systems enumerated in Appendix A. Additional code was utilized to record a number of aspects of the program's execution. The data types recorded includes those listed below.
+\subsection{Data Measured}
+\begin{enumerate}
+\item{Computational Complexity}
+\item{Space Complexity}
+\item{Execution Time}
+\item{CPU Time Utilized}
+\item{System Resources Utilized/Held}
+\end{enumerate}
+
+\subsection{Data Analysis}
+
+\section{Results}
+
+
+\section{Conclusion}
+Conclusion text
+
+
+
+
+
+% if have a single appendix:
+%\appendix[Proof of the Zonklar Equations]
+% or
+%\appendix  % for no appendix heading
+% do not use \section anymore after \appendix, only \section*
+% is possibly needed
+
+% use appendices with more than one appendix
+% then use \section to start each appendix
+% you must declare a \section before using any
+% \subsection or using \label (\appendices by itself
+% starts a section numbered zero.)
+%
+
+
+\appendices
+\section{Hardware Utilized}
+\begin{enumerate}
+\item{Desktop 1
+	\begin{itemize}
+	\item{Processor: Intel Core i7-4790K}
+	\item{Cores: 4 Physical, 8 Virtual}
+	\item{Clock Speed: 4.00 GHz, up to 4.40 GHz w/ turbo}
+	\item{RAM: 8 GB}
+	\item{OS: Windows 7 Home Premium, Service Pack 1, 64-bit}
+	\end{itemize}
+	}
+\item{Desktop 2
+	\begin{itemize}
+	\item{Processor: Intel Core i5}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 2.7 GHz}
+	\item{RAM: 8 GB DDR3 1333 MHz}
+	\item{OS: OS X 10.7.5}
+	\end{itemize}
+	}
+\item{Laptop 1
+	\begin{itemize}
+	\item{Processor: Intel Core i5-3427U}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 1.80 GHz, up to 2.80 GHz w/ turbo}
+	\item{RAM: 8 GB}
+	\item{OS: Ubuntu 16.04 LTS}
+	\end{itemize}
+	}
+\item{Laptop 2
+	\begin{itemize}
+	\item{Processor: Intel Core i5-8250U}
+	\item{Cores: 4 Physical, 8 Virtual}
+	\item{Clock Speed: 1.6 GHz, up to 3.4 GHz w/ turbo}
+	\item{RAM: 8GB LPDDR3 1866MHz}
+	\item{OS: Windows 10, 64-bit}
+	\end{itemize}
+	}
+\item{Laptop 3
+	\begin{itemize}
+	\item{Processor: Intel Core i5-4258U}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 2.4 GHz}
+	\item{RAM: 8 GB 1600MHz DDR3}
+	\item{OS: OS X Yosemite 10.10.5}
+	\end{itemize}
+	}
+\item{Laptop 4
+	\begin{itemize}
+	\item{Processor: Intel Core i5-m7200U}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 2.50 GHz Nominal, 2.70 GHz Actual, up to 3.10 GHz w/ turbo}
+	\item{RAM: 8 GB DDR4}
+	\item{OS: Windows 10 Home, 64-bit}
+	\end{itemize}
+	}
+\item{Laptop 5
+	\begin{itemize}
+	\item{Processor: Intel Core M3-6Y30}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 0.9 GHz, up to 2.2 GHz w/ turbo}
+	\item{RAM: 8 GB}
+	\item{OS: Windows 10 Home, 64-bit}
+	\end{itemize}
+	}
+\item{Laptop 6
+	\begin{itemize}
+	\item{Processor: Intel Core i5-5200U}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 2.2 GHz, up to 2.7 GHz w/ turbo}
+	\item{RAM: 8 GB DDR3}
+	\item{OS: Windows 7 Home, Service Pack 1, 64-bit}
+	\end{itemize}
+	}
+\item{Laptop 7
+	\begin{itemize}
+	\item{Processor: Intel Core i7-7820HQ}
+	\item{Cores: 4 Physical, 8 Virtual}
+	\item{Clock Speed: 2.9 GHz, up to 3.9 GHz w/ turbo}
+	\item{RAM: 16 GB}
+	\item{OS: OS X 10.13.2}
+	\end{itemize}
+	}
+\item{Laptop 8
+	\begin{itemize}
+	\item{Processor: Intel Core i5-4260U}
+	\item{Cores: 2 Physical, 4 Virtual}
+	\item{Clock Speed: 1.4 GHz, up to 2.7 GHz w/ turbo}
+	\item{RAM: 8 GB DDR3 1600 MHz}
+	\item{OS: OS X 10.12.6}
+	\end{itemize}
+	}
+\item{Raspberry Pi
+	\begin{itemize}
+	\item{Processor: 64-bit ARMv8 A53 CPU}
+	\item{Cores: 4}
+	\item{Clock Speed: 1.2 GHz}
+	\item{RAM: 1 GB LPDDR2}
+	\item{OS: Raspbian Stretch 4.9}
+	\end{itemize}
+	}
+
+\end{enumerate}
+
+% use section* for acknowledgment
+\section*{Acknowledgment}
+
+
+The authors would like to thank...
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+% references section
+\nocite{*}
+\bibliographystyle{apalike}
+\bibliography{woodBibliography}
+% can use a bibliography generated by BibTeX as a .bbl file
+% BibTeX documentation can be easily obtained at:
+% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
+% The IEEEtran BibTeX style support page is at:
+% http://www.michaelshell.org/tex/ieeetran/bibtex/
+%\bibliographystyle{IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+%\bibliography{IEEEabrv,../bib/paper}
+%
+% <OR> manually copy in the resultant .bbl file
+% set second argument of \begin to the number of references
+% (used to reserve space for the reference number labels box)
+%\begin{thebibliography}{1}
+
+%\bibitem{IEEEhowto:kopka}
+%Ref1
+%H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
+%  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+
+%\end{thebibliography}
+
+
+
+% You can push biographies down or up by placing
+% a \vfill before or after them. The appropriate
+% use of \vfill depends on what kind of text is
+% on the last page and whether or not the columns
+% are being equalized.
+
+%\vfill
+
+% Can be used to pull up biographies so that the bottom of the last one
+% is flush with the other column.
+%\enlargethispage{-5in}
+
+
+
+% that's all folks
+\end{document}
+
+

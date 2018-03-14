@@ -1,0 +1,94 @@
+\documentclass[11pt]{article}
+
+\usepackage{setspace}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[parfill]{parskip}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+\title{Specifications for RSA Efficiency Research}
+\author{George Wood}
+\date{Last Modified: 3/7/2018}
+
+\begin{document}
+\maketitle
+
+\thispagestyle{empty}
+
+\section{Misc. Hardware Info}
+
+\begin{enumerate}
+\item{Raspberry Pi
+	\begin{itemize}
+	\item{Use Raspbian OS}
+	\item{There may be implementation issues with Raspbian.}
+	\end{itemize}
+	}
+\item{Arduino
+	\begin{itemize}
+	\item{Will probably melt.}
+	\end{itemize}
+	}
+\item{Build hardware list, priority on RAM, processor, OS, and possibly GPU.
+	}
+\end{enumerate}
+
+
+\section{RSA Specs}
+
+\begin{enumerate}
+	\item{Don't worry about randomness - data will be pre-generated and consistent across trials.}
+	\item{Don't worry about padding for same reason}
+	\item{Use data of sizes: 64B, 1kB, 32kB, 64kB, 128kB, 1MB}
+	\item{Use keys of size: 512b, 1024b, 2048b, 4096b}
+\end{enumerate}
+
+\section{Measurements}
+
+\begin{enumerate}
+\item{Power consumption
+	\begin{itemize}
+	\item{Kill-A-Watt for physical measurements}
+	\item{Software such as MS's Joulemeter}
+	\end{itemize}
+	}
+\item{Cache/RAM IO Speed (Transfers/second)
+	\begin{itemize}
+	\item{Determined largely by RAM, info released by manufacturers}
+	\end{itemize}
+	}
+\item{Keep track of RAM usage and CPU usage}
+	
+\end{enumerate}
+
+
+
+\section{To-Dos/Deadlines}
+
+\begin{enumerate}
+\item{Deadlines
+	\begin{itemize}
+	\item{Thursday, 3/8/2018: Kill-A-Watt arrives, configure and test.}
+	\item{Sunday, 3/11/2018: Complete UI for performing tests/collecting data.}
+	\item{Monday, 3/12/2018 - Tuesday, 3/13/2018: Perform tests and collect data on all available machines.}
+	\item{Friday, 3/16/2018: Complete preliminary organization of all data collected up to this point.}
+	\item{Friday, 3/30/2018 - Saturday, 3/31/2018: Perform tests and collect data on all remaining machines.}
+	\item{Tuesday, 4/3/2018: Complete remaining organization of all data. Perform and record statistical analysis of data.}
+	\item{Thursday, 4/5/2018: Complete first draft of paper. }
+	\end{itemize}
+	}
+\end{enumerate}
+
+\section{Etc}
+\begin{enumerate}
+\item{Other Papers
+	\begin{itemize}
+	\item{Wyatt Yost}
+	\item{Thomas Graves}
+	\end{itemize}
+	}
+\end{enumerate}
+
+
+
+\end{document}
