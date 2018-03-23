@@ -6,7 +6,7 @@ FIPS Compliant RSA Implementation - George Wood - Capstone Project
 #include <fstream>
 #include <istream>
 #include <ctime>
-#include "./head/RSACipher.hpp"
+#include "./head/RSAResearchCipher.hpp"
 using namespace std;
 
 //Key sizes of 512b, 1024b, 2048b, 4096b
@@ -21,22 +21,7 @@ bool getTextFromFile(string& outputString)
   return true;
 }
 
-void genNewKeys(string fileName)
-{
-  fstream keyFile(fileName, fstream::out);
-  for (uint keySize : keySizes)
-  {
-    RSACipher keyGenCipher = RSACipher(keySize, false);
-    keyGenCipher.genKeys();
-    vector<BigInt> keyInfoTemp = keyGenCipher.getKeyInfo();
-    for (BigInt keyDatum : keyInfoTemp)
-    {
-      keyFile << keyDatum.get_str(hexBase) << endl;
-    }
-    keyFile << endl;
-  }
-  keyFile.close();
-}
+
 
 void runTests(string keyFileName, string dataFileName)
 {
@@ -86,7 +71,7 @@ void runTests(string keyFileName, string dataFileName)
   {
     curKeySize = keySizes.at(curKeyNum);
     cout << "Running tests for key size " << curKeySize << " bits." <<endl;
-    RSACipher cipher(curKeySize, false);
+    RSACipher cipher(curKeySize);
     cipher.setKeyInfo(allKeyInfo.at(curKeyNum));
     cout << "  Running tests for encryption." << endl;
     for (uint i = 0; i < fileSizes.size(); i++)
@@ -240,8 +225,6 @@ int main()
 {
   cout << "RSA Efficiency Testing - George Wood" << endl;
 
-  const string keyFileName = "RSAKeys.txt";
-  const string dataFileName = "RSAData.txt";
   //User input choice
   string userChoice;
 
