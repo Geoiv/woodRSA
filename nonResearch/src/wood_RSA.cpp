@@ -119,6 +119,7 @@ bool textInputMenu(string& outputString)
 /*Displays menu for encryption*/
 void encryptionMenu(RSACipher& cipher)
 {
+
   cout << "Encryption selected." << endl;
   string plainText = "07d0";
   string cipherText = "";
@@ -306,6 +307,8 @@ void keyOptMenu(RSACipher& cipher)
 int main()
 {
   cout << "FIPS COMPLIANT RSA 2048 & SHA-224 - GEORGE WOOD" << endl;
+  const string ptFileName = "pt.txt";
+  const string ctFileName = "ct.txt";
 
   //The cipher to be used for any upcoming encyrption or decryption
   RSACipher cipher;
@@ -332,6 +335,7 @@ int main()
     //User wants to encrypt
     if (userChoice == "1")
     {
+      fstream ptFile(keyFileName, fstream::in);
       encryptionMenu(cipher);
     }
     //User wants to decrypt

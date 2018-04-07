@@ -31,34 +31,26 @@ private:
   security strength (of < 67), in addition to the fact that SHA-1 has been
   depricated.
   */
-  const uint nLen0 = 512;
+  const uint nLen0 = 1024;
   const uint s0 = 80;
-  const uint nLen1 = 1024;
-  const uint s1 = 80;
-  const uint nLen2 = 2048;
-  const uint s2 = 112;
-  const uint nLen3 = 3072;
-  const uint s3 = 128;
-  const uint nLen4 = 4096;
-  const uint s4 = 128;
+  const uint nLen1 = 2048;
+  const uint s1 = 112;
+  const uint nLen2 = 3072;
+  const uint s2 = 128;
 
   //Pairs of key sizes to security strengths
   std::map<uint, uint> secStrengthPairs =
   {
     {nLen0, s0},
     {nLen1, s1},
-    {nLen2, s2},
-    {nLen3, s3},
-    {nLen4, s4}
+    {nLen2, s2}
   };
   //Pairs of key sizes to SHA output block sizes
   std::map<uint, uint> shaBlockPairs =
   {
     {nLen0, sha224OutLen},
     {nLen1, sha224OutLen},
-    {nLen2, sha224OutLen},
-    {nLen3, sha256OutLen},
-    {nLen4, sha256OutLen}
+    {nLen2, sha256OutLen}
   };
 
   //Vals for using in hash algorithms during OAEP mechanisms
@@ -106,10 +98,6 @@ public:
   RSACipher(uint inputNLen);
   //Generates public and private RSA keys
   bool genKeys();
-  //Sets keys to values set in a vector
-  bool setKeyInfo(std::vector<BigInt> keyInfo);
-  //Returns key info in a vector
-  std::vector<BigInt> getKeyInfo();
   //Displays key information to the user
   void displayKeyInfo();
   //Generates masks for OAEP mechanisms

@@ -19,7 +19,6 @@ RSACipher::RSACipher()
   nLen = nLen1;
   securityStrength = secStrengthPairs.at(nLen);
   shaOutLen = shaBlockPairs.at(nLen);
-
 }
 
 /*Constructor for specified nLen*/
@@ -407,7 +406,6 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
     outputPrime = ((2 * ((t * p2) - y) * p0 * p1) + 1);
     //18. pGenCounter = pGenCounter + 1.
     pGenCounter++;
-    cout << outputPrime - 1 << endl;
     //19. If (GCD(outputPrime–1, e) = 1), then
     if (gcd(outputPrime - 1, e) == 1)
     {
@@ -484,7 +482,7 @@ bool RSACipher::genPrimes(const BigInt seed)
   const uint bitLength = 198;
   //1. If nLen isn't 2048 nor 3072, then return (FAILURE, 0, 0)
   //     (handled in constructor)
-  if ((nLen != nLen1) && (nLen != nLen2))
+  if (nLen != nLen1 && nLen != nLen2)
   {
     return false;
   }
@@ -633,32 +631,6 @@ bool RSACipher::genKeys()
   }
   //Returns success
   return true;
-}
-
-bool RSACipher::setKeyInfo(std::vector<BigInt> keyInfo)
-{
-  if (keyInfo.at(4).get_str(hexBase).length() > nLen)
-  {
-    cout << "Invalid input key data." << endl;
-    return false;
-  }
-  e = keyInfo.at(0);
-  d = keyInfo.at(1);
-  p = keyInfo.at(2);
-  q = keyInfo.at(3);
-  n = keyInfo.at(4);
-  return true;
-}
-
-vector<BigInt> RSACipher::getKeyInfo()
-{
-  vector<BigInt> keyInfo;
-  keyInfo.push_back(e);
-  keyInfo.push_back(d);
-  keyInfo.push_back(p);
-  keyInfo.push_back(q);
-  keyInfo.push_back(n);
-  return keyInfo;
 }
 
 /*Displays key info for this RSA system instance*/
