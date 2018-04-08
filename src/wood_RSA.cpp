@@ -30,7 +30,7 @@ void keySizeMenu(RSACipher& cipher)
   {
     //Displays menu
     cout << menuString << endl;
-    cout << "Choice: ";
+    cout << endl << "Choice: ";
     getline(cin, userChoice);
     //User wants a 2048-bit key
     if (userChoice == "1")
@@ -102,7 +102,7 @@ bool saveCurrentKey(RSACipher& cipher, string keyDir)
   const uint maxFileNameSize = 256;
   //Gets list of all currently stored files and displays them
   vector<string> keyFileNames = readKeyDirectory(keyDir);
-  cout << endl << "Current key files: " << endl;
+  cout << endl << "Saved key files: " << endl;
   for (uint n = 0; n < keyFileNames.size(); n++)
   {
     cout << (n + 1) << ". " << keyFileNames.at(n) << endl;
@@ -176,7 +176,7 @@ bool setKey(RSACipher& cipher, string keyDir)
   const uint keyDatumCount = 5;
   //Gets and prints list of currently saved files
   vector<string> keyFileNames = readKeyDirectory(keyDir);
-  cout << endl << "Current key files: " << endl << endl;
+  cout << endl << "Saved key files: " << endl << endl;
   for (uint n = 0; n < keyFileNames.size(); n++)
   {
     cout << (n + 1) << ". " << keyFileNames.at(n) << endl;
@@ -256,7 +256,7 @@ void encryptionMenu(RSACipher& cipher, string ptFileName, string ctFileName)
   ctFile << cipherText;
   ctFile.close();
 
-  cout << endl << "Encrypted output: " << cipherText << endl;
+  cout << endl << "Encrypted output: " << endl << cipherText << endl;
 }
 
 /*Displays menu for decryption*/
@@ -317,7 +317,7 @@ void decryptionMenu(RSACipher& cipher, string ctFileName, string dtFileName)
   dtFile << plainText;
   dtFile.close();
 
-  cout << endl << "Decrypted output: " << plainText << endl;
+  cout << endl << "Decrypted output: " << endl << plainText << endl;
 }
 
 /*Displays menu for signing*/
@@ -384,7 +384,7 @@ void signingMenu(RSACipher& cipher, string ptFileName, string stFileName)
   stFile << signedText;
   stFile.close();
 
-  cout << endl << "Signing output: " << signedText << endl;
+  cout << endl << "Signed output: " << endl << signedText << endl;
 }
 
 /*Displays menu for authentication*/
@@ -405,7 +405,7 @@ void authenticationMenu(RSACipher& cipher, string stFileName, string atFileName)
   atFile << authText;
   atFile.close();
 
-  cout << "Authentication output: " << authText << endl;
+  cout << endl << "Authenticated output: " << endl << authText << endl;
 }
 
 /*Displays menu for keys*/
@@ -417,7 +417,7 @@ void keyOptMenu(RSACipher& cipher)
   //Prompt message
   string menuString = "Select from the following options:\n1. Generate keys"
     "\n2. View keys\n3. Change key size\n4. Save keys\n5. Load keys\n6. "
-    "View all saved key files for current key size\n7. Return to main menu\n";
+    "View all saved key files for current key size\n7. Return to main menu";
 
   //User input choice
   string userChoice;
@@ -427,7 +427,7 @@ void keyOptMenu(RSACipher& cipher)
   while (smallLoop)
   {
     cout << endl << menuString << endl;
-    cout << "Choice: ";
+    cout << endl << "Choice: ";
     //Gets user menu choice
     getline(cin, userChoice);
 
@@ -468,7 +468,7 @@ void keyOptMenu(RSACipher& cipher)
       //Gets all relevant file names
       vector<string> keyFileNames = readKeyDirectory(keyDir);
       //Prints file names
-      cout << endl << "Current key files: " << endl;
+      cout << endl << "Saved key files: " << endl;
       for (uint n = 0; n < keyFileNames.size(); n++)
       {
         cout << (n + 1) << ". " << keyFileNames.at(n) << endl;
@@ -521,7 +521,7 @@ int main()
   {
     //Displays menu
     cout << menuString << endl;
-    cout << "Choice: ";
+    cout << endl << "Choice: ";
     //Gets user menu choice
     getline(cin, userChoice);
 

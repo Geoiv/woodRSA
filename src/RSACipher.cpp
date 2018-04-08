@@ -698,11 +698,11 @@ vector<BigInt> RSACipher::getKeyInfo()
 /*Displays key info for this RSA system instance*/
 void RSACipher::displayKeyInfo()
 {
-  cout << "Public key (e): " << e.get_str(hexBase) << endl;
-  cout << endl << "Private key (d): " << d.get_str(hexBase) << endl;
-  cout << endl << "n: " << n.get_str(hexBase) << endl;
-  cout << endl << "p: " << p.get_str(hexBase) << endl;
-  cout << endl << "q: " << q.get_str(hexBase) << endl << endl;
+  cout << "Public key (e): " << endl << e.get_str(hexBase) << endl;
+  cout << endl << "Private key (d): " << endl << d.get_str(hexBase) << endl;
+  cout << endl << "n: " << endl << n.get_str(hexBase) << endl;
+  cout << endl << "p: " << endl << p.get_str(hexBase) << endl;
+  cout << endl << "q: " << endl << q.get_str(hexBase) << endl << endl;
 }
 
 /*Standard RSA encryption*/
