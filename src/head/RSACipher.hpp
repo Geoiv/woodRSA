@@ -96,8 +96,16 @@ public:
   RSACipher();
   //Constructor for an input nLen
   RSACipher(uint inputNLen);
+  //Resets cipher to a specified key size
+  void changeKeySize(uint newKeySize);
   //Generates public and private RSA keys
   bool genKeys();
+  //Returns the value of nLen
+  uint getNLen();
+  //Sets keys based on supplied values
+  bool setKeyInfo(std::vector<BigInt> keyInfo);
+  //Retrieves key info for saving
+  std::vector<BigInt> getKeyInfo();
   //Displays key information to the user
   void displayKeyInfo();
   //Generates masks for OAEP mechanisms

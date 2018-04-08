@@ -89,14 +89,15 @@ vector<uint> SHAHash::padParseInput(string& inputHex)
   return inputWords;
 }
 
-/*Right circular rotation of n bits in input value x as specified in FIPS 180-4*/
+/*Right circular rotation of n bits in input value x as specified
+  in FIPS 180-4*/
 uint SHAHash::rotr(uint x, uint n)
 {
   return ((x >> n) | (x << (bitsInWord - n)));
 }
 
-/*Intermediate functions for hashing as specified in FIPS 180-4*/
-//Uppercase sigma sub 0 equation
+/**Intermediate functions for hashing as specified in FIPS 180-4**/
+/*Uppercase sigma sub 0 equation*/
 uint SHAHash::bSigmaSub0(uint x)
 {
   const uint rotVal0 = 2;
@@ -109,7 +110,7 @@ uint SHAHash::bSigmaSub0(uint x)
   return outputX;
 }
 
-//Uppercase sigma sub 1 equation
+/*Uppercase sigma sub 1 equation*/
 uint SHAHash::bSigmaSub1(uint x)
 {
   const uint rotVal0 = 6;
@@ -121,7 +122,7 @@ uint SHAHash::bSigmaSub1(uint x)
   uint outputX = rotrX0^rotrX1^rotrX2;
   return outputX;
 }
-//Lowercase sigma sub 0 equation
+/*Lowercase sigma sub 0 equation*/
 uint SHAHash::sSigmaSub0(uint x)
 {
   const uint rotVal0 = 7;
@@ -133,7 +134,7 @@ uint SHAHash::sSigmaSub0(uint x)
   uint outputX = rotrX0^rotrX1^shiftX;
   return outputX;
 }
-//Lowercase sigma sub 1 equation
+/*Lowercase sigma sub 1 equation*/
 uint SHAHash::sSigmaSub1(uint x)
 {
   const uint rotVal0 = 17;
@@ -146,10 +147,12 @@ uint SHAHash::sSigmaSub1(uint x)
   return outputX;
 }
 
+/*chFunc, as defined in FIPS specifications*/
 uint SHAHash::chFunc(uint x, uint y, uint z)
 {
   return (x & y)^(~x & z);
 }
+/*majFunc, as defined in FIPS specifications*/
 uint SHAHash::majFunc(uint x, uint y, uint z)
 {
   return (x & y)^(x & z)^(y & z);
@@ -175,6 +178,7 @@ string SHAHash::hash(string inputHex)
   uint hashVals[] = {h0, h1, h2, h3, h4, h5, h6, h7};
   vector<uint> inputWords = padParseInput(inputHex);
 
+  //Intermediate vars used in each step of the hashing process
   uint a;
   uint b;
   uint c;
@@ -188,6 +192,7 @@ string SHAHash::hash(string inputHex)
   uint blockCount = inputWords.size() / wordsInBlock;
   for (uint i = 0; i < blockCount; i++)
   {
+    //Sets initial values of intermediate vars
     a = hashVals[0];
     b = hashVals[1];
     c = hashVals[2];
@@ -199,6 +204,7 @@ string SHAHash::hash(string inputHex)
 
     vector<uint> W;
 
+    //Sets up array of W values from input data
     for (uint j = 0; j < messageSchedFirst; j++)
     {
       W.push_back(inputWords.at((i * wordsInBlock) + j));
@@ -214,6 +220,7 @@ string SHAHash::hash(string inputHex)
       W.push_back(newW);
     }
 
+    //Updates intermediate v alues for each round of the hashing
     for (uint j = 0; j < roundCount; j++)
     {
       uint t1 = h + bSigmaSub1(e) + chFunc(e, f, g) + K.at(j) + W.at(j);
@@ -227,7 +234,7 @@ string SHAHash::hash(string inputHex)
       b = a;
       a = t1 + t2;
     }
-
+    //Updates output has values for each block of input data
     hashVals[0] = (a + hashVals[0]) % twoExp32;
     hashVals[1] = (b + hashVals[1]) % twoExp32;
     hashVals[2] = (c + hashVals[2]) % twoExp32;

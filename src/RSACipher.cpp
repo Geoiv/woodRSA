@@ -38,6 +38,29 @@ RSACipher::RSACipher(uint inputNLen)
   }
 }
 
+/*Changes nLen and resets key information*/
+void RSACipher::changeKeySize(uint inputNLen)
+{
+  //Sets nLen and securityStrength according to the requested nLen
+  if (inputNLen == nLen0 || inputNLen == nLen1 || inputNLen == nLen2)
+  {
+    nLen = inputNLen;
+    securityStrength = secStrengthPairs.at(inputNLen);
+    shaOutLen = shaBlockPairs.at(inputNLen);
+    //Key info reset to 0
+    e = 0;
+    d = 0;
+    p = 0;
+    q = 0;
+    n = 0;
+  }
+  //Invalid nLen request
+  else
+  {
+    cout << "Invalid nLen input." << endl;
+  }
+}
+
 /*Hashes the input integer*/
 BigInt RSACipher::hashAlg(const BigInt inputX)
 {
@@ -337,7 +360,8 @@ bool RSACipher::genPrimeFromAuxiliaries(const uint l, const uint n1,
   BigInt pGenCounter = 0;
   //9. x = 0
   BigInt x = 0;
-  //10. For i = 0 to iterations: x = x + (hashAlg(primeSeed + i)) ∗ 2^(i * outLen)
+  //10. For i = 0 to iterations:
+  //    x = x + (hashAlg(primeSeed + i)) ∗ 2^(i * outLen)
   for (uint i = 0; i <= iterations; i++)
   {
     BigInt exp2_ixOutLen;
@@ -633,6 +657,44 @@ bool RSACipher::genKeys()
   return true;
 }
 
+/*Returns the value of nLen*/
+uint RSACipher::getNLen()
+{
+  return nLen;
+}
+
+/*Sets key information to values provided in a vector*/
+bool RSACipher::setKeyInfo(vector<BigInt> keyInfo)
+{
+  //Index of n value
+  const uint nIndex = 2;
+  //Rejects change if size of input key is too large (greater than nLen)
+  if (keyInfo.at(nIndex).get_str(binBase).length() > nLen)
+  {
+    cout << "Invalid input key data." << endl;
+    return false;
+  }
+  //Sets key info to input values
+  e = keyInfo.at(0);
+  d = keyInfo.at(1);
+  n = keyInfo.at(2);
+  p = keyInfo.at(3);
+  q = keyInfo.at(4);
+  return true;
+}
+
+/*Loads key information into a vector and returns it*/
+vector<BigInt> RSACipher::getKeyInfo()
+{
+  vector<BigInt> keyInfo;
+  keyInfo.push_back(e);
+  keyInfo.push_back(d);
+  keyInfo.push_back(n);
+  keyInfo.push_back(p);
+  keyInfo.push_back(q);
+  return keyInfo;
+}
+
 /*Displays key info for this RSA system instance*/
 void RSACipher::displayKeyInfo()
 {
@@ -675,8 +737,6 @@ bool RSACipher::encrypt(string plainTextString, string& cipherTextString)
   }
   return true;
 }
-
-
 
 /*Standard RSA decryption with options for CRT*/
 bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
@@ -750,7 +810,6 @@ bool RSACipher::decrypt(string cipherTextString, string& plainTextString,
   return true;
 }
 
-
 /*Standard RSA signing with options for CRT*/
 bool RSACipher::sign(string plainTextString, string& cipherTextString,
                      bool crtFlag)
@@ -821,6 +880,7 @@ bool RSACipher::sign(string plainTextString, string& cipherTextString,
   return true;
 }
 
+/*Standard RSA authentication*/
 bool RSACipher::auth(string cipherTextString, string& plainTextString)
 {
   //Key info not available

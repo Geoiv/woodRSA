@@ -175,7 +175,6 @@ string SHAHash::hash(string inputHex)
   uint hashVals[] = {h0, h1, h2, h3, h4, h5, h6, h7};
   vector<uint> inputWords = padParseInput(inputHex);
 
-  //Intermediate vars used in each step of the hashing process
   uint a;
   uint b;
   uint c;
@@ -189,7 +188,6 @@ string SHAHash::hash(string inputHex)
   uint blockCount = inputWords.size() / wordsInBlock;
   for (uint i = 0; i < blockCount; i++)
   {
-    //Sets initial values of intermediate vars
     a = hashVals[0];
     b = hashVals[1];
     c = hashVals[2];
@@ -201,7 +199,6 @@ string SHAHash::hash(string inputHex)
 
     vector<uint> W;
 
-    //Sets up array of W values from input data
     for (uint j = 0; j < messageSchedFirst; j++)
     {
       W.push_back(inputWords.at((i * wordsInBlock) + j));
@@ -217,7 +214,6 @@ string SHAHash::hash(string inputHex)
       W.push_back(newW);
     }
 
-    //Updates intermediate v alues for each round of the hashing
     for (uint j = 0; j < roundCount; j++)
     {
       uint t1 = h + bSigmaSub1(e) + chFunc(e, f, g) + K.at(j) + W.at(j);
@@ -231,7 +227,7 @@ string SHAHash::hash(string inputHex)
       b = a;
       a = t1 + t2;
     }
-    //Updates output has values for each block of input data
+
     hashVals[0] = (a + hashVals[0]) % twoExp32;
     hashVals[1] = (b + hashVals[1]) % twoExp32;
     hashVals[2] = (c + hashVals[2]) % twoExp32;

@@ -50,14 +50,18 @@ bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
 {
 
   SHAHash sha(shaType);
+  //Value to hold hashed data until substring is taken
   string temp = "";
+  //Iterations of loop
   uint len = ceil(bitsToReturn / shaType);
   uint counter = 1;
   for (uint i = 1; i <= len; i++)
   {
+    //Converts integers to hex
     stringstream hexStream;
     hexStream << hex << counter;
     hexStream << hex << bitsToReturn;
+    //Concatenates temp w/ output hashed data
     temp += sha.hash(hexStream.str() + inputHex);
     counter++;
   }
@@ -68,6 +72,7 @@ bool RandGen::hashDf(string inputHex, uint bitsToReturn, string& outputHex)
 /*Constructor with parameter for the SHA output block size to be used*/
 RandGen::RandGen(uint shaOutLen)
 {
+  //Sets SHA type to use
   if (shaOutLen == sha224OutLen)
   {
     shaType = shaOutLen;
@@ -81,6 +86,7 @@ RandGen::RandGen(uint shaOutLen)
     shaType = sha256OutLen;
     cout << "Invalid SHA output length. Set to 256." << endl;
   }
+  //Gets randomized instantiation nonce
   instantiationNonce = time(NULL);
 }
 
@@ -176,7 +182,7 @@ bool RandGen::genRandom(uint requestedBitCount, string& pseudoRandNum)
   //   (Reseeding not needed)
   string w;
   //7. If additInput != null, then do
-  //  Additional input not utilized
+  //  Additional input not utilized in this implementation
 
   //8. m = ceil(requestedBitCount / outlen)
   uint m = ceil((double)requestedBitCount / shaType);

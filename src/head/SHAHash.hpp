@@ -1,5 +1,5 @@
 /*
-SHA256.hpp - George Wood
+SHAHash.hpp - George Wood
 */
 
 #ifndef __SHAHASH_HPP__
@@ -13,7 +13,7 @@ class SHAHash
 {
 private:
 
-
+  //This SHAHash class can perform SHA-224 and SHA 256, depending on reqs
   //Hash values used in hashing algorithm (Values depend on SHA type)
   uint h0;
   uint h1;
