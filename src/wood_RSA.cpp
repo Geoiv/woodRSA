@@ -493,8 +493,8 @@ int main()
   cout << "FIPS-COMPLIANT* RSA - GEORGE WOOD" << endl;
   cout << "*With one exception" << endl;
   cout << "Data to be manipulated can be user-altered by modifying the "
-          "'pt.txt' file in the 'results' folder. Input must be in "
-          "hexadecimal format." << endl;
+          "text files in the 'results' folder, specifically 'pt.txt' for plain "
+          "text. Input must be in hexadecimal format." << endl;
   cout << "Default key size is 2048 bits. This can be changed in the key "
           "options menu." << endl;
   const string ptFileName = "./results/pt.txt";

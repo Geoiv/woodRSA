@@ -1,5 +1,5 @@
 /*
-RSACipher.cpp - George Wood - RSA 2048 and SHA 224
+RSACipher.cpp - George Wood - RSA Cryptosystem
 */
 
 #include <random>

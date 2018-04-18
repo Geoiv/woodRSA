@@ -1,0 +1,12 @@
+/usr/lib/gcc/x86_64-linux-gnu/5/../../../x86_64-linux-gnu/crt1.o: In function `_start':
+(.text+0x20): undefined reference to `main'
+/tmp/ccWZewPq.o: In function `RSACipher::hashAlg(__gmp_expr<__mpz_struct [1], __mpz_struct [1]>)':
+RSACipher.cpp:(.text+0xa1c): undefined reference to `SHAHash::SHAHash(unsigned int)'
+RSACipher.cpp:(.text+0xa64): undefined reference to `SHAHash::hash(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
+/tmp/ccWZewPq.o: In function `RSACipher::genKeys()':
+RSACipher.cpp:(.text+0x3e92): undefined reference to `RandGen::RandGen(unsigned int)'
+RSACipher.cpp:(.text+0x3ea1): undefined reference to `RandGen::instantiate()'
+RSACipher.cpp:(.text+0x3f14): undefined reference to `RandGen::genRandom(unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)'
+RSACipher.cpp:(.text+0x3fc8): undefined reference to `RandGen::genRandom(unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)'
+RSACipher.cpp:(.text+0x410d): undefined reference to `RandGen::genRandom(unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)'
+collect2: error: ld returned 1 exit status

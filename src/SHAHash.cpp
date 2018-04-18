@@ -172,7 +172,7 @@ string SHAHash::hash(string inputHex)
   const uint messageSchedFirst = 16;
   const uint messageSchedSecond = 64;
   const uint roundCount = 64;
-  const uint twoExp32 = pow(2, 32);
+  const uint twoExp32 = (uint) pow(2, 32);
 
   //Sets initial hash values, determined by SHA type
   uint hashVals[] = {h0, h1, h2, h3, h4, h5, h6, h7};
